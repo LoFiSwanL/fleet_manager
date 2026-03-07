@@ -3,45 +3,68 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - FleetManager.WebMVC</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - RLP</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/FleetManager.WebMVC.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm bg-nav" style="border-bottom: 1px solid var(--border-color);">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">FleetManager.WebMVC</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+                <a class="navbar-brand text-accent font-weight-bold" asp-area="" asp-controller="Home" asp-action="Index">RLP // SYSTEM</a>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end">
+                    <button id="themeToggle" class="btn btn-sm btn-outline-secondary text-theme border-secondary">DAY / NIGHT</button>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+    <div class="d-flex w-100">
+        <aside class="sidebar p-3 d-none d-md-flex flex-column" style="width: 250px;">
+
+            <div class="w-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="text-accent m-0">WORKSPACES</h6>
+                    <button id="btnEditWorkspaces" class="btn btn-sm btn-outline-secondary text-theme" style="font-size: 0.7rem;">EDIT</button>
+                </div>
+                <ul class="nav flex-column mb-4">
+                    <li class="nav-item mb-2"><a class="nav-link text-theme p-0" asp-controller="Robots" asp-action="Index">+ /UNITS</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link text-theme p-0" asp-controller="HardwareLogs" asp-action="Index">+ /LOGS</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link text-theme p-0" asp-controller="Users" asp-action="Index">+ /OPERATORS</a></li>
+
+                    <li class="nav-item mb-2 mt-3"><a class="nav-link text-secondary p-0" asp-controller="Policies" asp-action="Index">- Policies</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link text-secondary p-0" asp-controller="Firmwares" asp-action="Index">- Firmwares</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link text-secondary p-0" asp-controller="RobotStatus" asp-action="Index">- Statuses</a></li>
+                </ul>
+
+                <button id="btnAddWorkspace" class="btn btn-sm btn-outline-success w-100 mb-4" style="display: none;">+ ADD WORKSPACE</button>
+            </div>
+
+            <div class="mt-auto pt-4 border-top border-secondary w-100">
+                <button id="btnSimulate" class="btn btn-sm btn-outline-warning w-100 text-start font-monospace">
+                    > RUN_SIMULATION
+                </button>
+            </div>
+
+        </aside>
+
+        <main role="main" class="flex-grow-1 p-4 container-fluid" style="padding-bottom: 80px !important;">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - FleetManager.WebMVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="record-bar fixed-bottom d-flex align-items-center justify-content-between px-4">
+        <div class="d-flex align-items-center">
+            <span id="recordStatus" class="recording-dot me-3"></span>
+            <span id="recordTime" class="text-theme font-monospace fs-5">00:00:00</span>
+        </div>
+        <div>
+            <button id="btnStart" class="btn btn-outline-success btn-sm me-2">START</button>
+            <button id="btnSave" class="btn btn-outline-info btn-sm me-2" disabled>SAVE</button>
+            <button id="btnDiscard" class="btn btn-outline-danger btn-sm" disabled>DISCARD</button>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

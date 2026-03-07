@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace FleetManager.Domain.Models;
 
 public partial class Robot : BaseEntity
 {
+    [Required(ErrorMessage = "Ім'я є обов'язковим")]
     public string Name { get; set; } = null!;
 
     public string SerialNumber { get; set; } = null!;
@@ -17,9 +19,9 @@ public partial class Robot : BaseEntity
 
     public int? FirmwareId { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public virtual Firmware? Firmware { get; set; }
 

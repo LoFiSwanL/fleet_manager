@@ -11,10 +11,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("45988f63-fdab-4a87-9540-a6566ebacca8")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("FleetManager.WebMVC")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b28b945071a0462db5624ec1f0fae187e8dc6fcc")]
 [assembly: System.Reflection.AssemblyProductAttribute("FleetManager.WebMVC")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FleetManager.WebMVC")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

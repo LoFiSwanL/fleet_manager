@@ -12,3 +12,4 @@ F:\C#\fleet_manager\FleetManager\FleetManager.Domain\obj\Debug\net10.0\refint\Fl
 F:\C#\fleet_manager\FleetManager\FleetManager.Domain\obj\Debug\net10.0\FleetManager.Domain.pdb
 F:\C#\fleet_manager\FleetManager\FleetManager.Domain\obj\Debug\net10.0\FleetManager.Domain.genruntimeconfig.cache
 F:\C#\fleet_manager\FleetManager\FleetManager.Domain\obj\Debug\net10.0\ref\FleetManager.Domain.dll
+F:\C#\fleet_manager\FleetManager\FleetManager.Domain\obj\Debug\net10.0\FleetManager.Domain.sourcelink.json

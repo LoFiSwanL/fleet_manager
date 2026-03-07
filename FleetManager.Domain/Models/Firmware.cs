@@ -7,7 +7,7 @@ public partial class Firmware : BaseEntity
 {
     public string Version { get; set; } = null!;
 
-    public DateTime? ReleaseDate { get; set; }
+    public DateTime ReleaseDate { get; set; } = DateTime.UtcNow;
 
     public virtual ICollection<Robot> Robots { get; set; } = new List<Robot>();
 }

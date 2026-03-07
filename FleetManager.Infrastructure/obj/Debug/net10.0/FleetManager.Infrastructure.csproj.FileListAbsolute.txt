@@ -15,3 +15,4 @@ F:\C#\fleet_manager\FleetManager\FleetManager.Infrastructure\obj\Debug\net10.0\r
 F:\C#\fleet_manager\FleetManager\FleetManager.Infrastructure\obj\Debug\net10.0\FleetManager.Infrastructure.pdb
 F:\C#\fleet_manager\FleetManager\FleetManager.Infrastructure\obj\Debug\net10.0\FleetManager.Infrastructure.genruntimeconfig.cache
 F:\C#\fleet_manager\FleetManager\FleetManager.Infrastructure\obj\Debug\net10.0\ref\FleetManager.Infrastructure.dll
+F:\C#\fleet_manager\FleetManager\FleetManager.Infrastructure\obj\Debug\net10.0\FleetManager.Infrastructure.sourcelink.json

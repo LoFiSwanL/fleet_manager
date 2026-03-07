@@ -1,8 +1,95 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row" id="workspace-grid"></div>
+
+<div id="razor-templates" style="display: none;">
+
+    <div id="tpl-robots" class="col-lg-6 col-md-12 mb-4 workspace-wrapper" data-ws-type="robots">
+        <div class="workspace-card p-3">
+            <span class="delete-btn" title="Remove Workspace">✖</span>
+            <h6 class="text-accent mb-3">/PERCEPTION/UNITS_DATA</h6>
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Unit Name</th><th>Serial</th><th>IP Address</th></tr></thead>
+                <tbody>
+                    @foreach (var item in (IEnumerable<FleetManager.Domain.Models.Robot>)ViewBag.Robots)
+                    {
+                        <tr><td>@item.Name</td><td>@item.SerialNumber</td><td>@item.IpAddress</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tpl-logs" class="col-lg-6 col-md-12 mb-4 workspace-wrapper" data-ws-type="logs">
+        <div class="workspace-card p-3">
+            <span class="delete-btn" title="Remove Workspace">✖</span>
+            <h6 class="text-accent mb-3">/SYSTEM/HARDWARE_LOGS</h6>
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Time</th><th>Unit</th><th>Message</th></tr></thead>
+                <tbody>
+                    @foreach (var log in (IEnumerable<FleetManager.Domain.Models.HardwareLog>)ViewBag.Logs)
+                    {
+                        <tr><td>@log.CreatedAt.ToString("HH:mm")</td><td>@log.Robot?.Name</td><td>@log.Message</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tpl-users" class="col-lg-6 col-md-12 mb-4 workspace-wrapper" data-ws-type="users">
+        <div class="workspace-card p-3">
+            <span class="delete-btn" title="Remove Workspace">✖</span>
+            <h6 class="text-accent mb-3">/OPERATORS/ACTIVE</h6>
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Username</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach (var u in (IEnumerable<FleetManager.Domain.Models.User>)ViewBag.Users)
+                    {
+                        <tr>
+                            <td>@u.Username</td>
+                            <td>
+                                @if (u.IsActive == true)
+                                {
+                                    <span style="color:#00FF41; font-weight:bold;">[ ACTIVE ]</span>
+                                }
+                                else
+                                {
+
+                                    <span style="color:red; font-weight:bold;">[ OFFLINE ]</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tpl-camera" class="col-lg-6 col-md-12 mb-4 workspace-wrapper" data-ws-type="camera">
+        <div class="workspace-card p-3 d-flex flex-column">
+            <span class="delete-btn" title="Remove Workspace">✖</span>
+            <h6 class="text-accent mb-3">/PERCEPTION/LOCAL_CAM</h6>
+            <div class="flex-grow-1 bg-black position-relative" style="border-radius: 4px; overflow: hidden; min-height: 200px;">
+                <video class="local-camera w-100 h-100 position-absolute" style="object-fit: cover; top:0; left:0;" autoplay playsinline muted></video>
+                <span class="cam-status position-absolute bottom-0 start-0 p-2 text-accent" style="font-size: 0.7rem; z-index: 10;">[ SIGNAL: ACQUIRING... ]</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="tpl-empty" class="col-lg-6 col-md-12 mb-4 workspace-wrapper" data-ws-type="empty">
+        <div class="workspace-card p-3 d-flex flex-column justify-content-center align-items-center">
+            <span class="delete-btn" title="Remove Workspace">✖</span>
+            <h6 class="text-accent mb-3 w-100 position-absolute" style="top:15px; left:15px;">/NEW_WORKSPACE</h6>
+            <div class="text-center mt-4">
+                <span class="text-theme opacity-50 mb-3 d-block">[ SELECT DATA SOURCE ]</span>
+                <button class="btn btn-sm btn-outline-success select-source-btn m-1" data-target="robots">/UNITS</button>
+                <button class="btn btn-sm btn-outline-success select-source-btn m-1" data-target="logs">/LOGS</button>
+                <button class="btn btn-sm btn-outline-success select-source-btn m-1" data-target="users">/OPERATORS</button>
+                <button class="btn btn-sm btn-outline-success select-source-btn m-1" data-target="camera">/LOCAL_CAM</button>
+            </div>
+        </div>
+    </div>
+
 </div>

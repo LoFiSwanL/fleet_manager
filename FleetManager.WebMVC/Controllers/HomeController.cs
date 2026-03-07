@@ -1,25 +1,25 @@
-using FleetManager.WebMVC.Models;
+using FleetManager.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 
 namespace FleetManager.WebMVC.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly FleetContext _context;
+
+        public HomeController(FleetContext context)
         {
-            return View();
+            _context = context;
         }
 
-        public IActionResult Privacy()
+        public async Task<IActionResult> Index()
         {
-            return View();
-        }
+            ViewBag.Robots = await _context.Robots.Include(r => r.Status).Take(10).ToListAsync();
+            ViewBag.Logs = await _context.HardwareLogs.Include(h => h.Robot).OrderByDescending(l => l.CreatedAt).Take(8).ToListAsync();
+            ViewBag.Users = await _context.Users.Take(8).ToListAsync();
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View();
         }
     }
 }

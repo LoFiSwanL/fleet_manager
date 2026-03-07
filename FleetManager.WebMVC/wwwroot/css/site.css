@@ -1,31 +1,112 @@
-html {
-  font-size: 14px;
+:root {
+    --bg-color: #0c0d0e;
+    --card-bg: #111213;
+    --text-color: #e0e0e0;
+    --accent-color: #00FF41;
+    --border-color: #1a1b1c;
+    --nav-bg: #000000;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+body.light-theme {
+    --bg-color: #e9ecef;
+    --card-bg: #ffffff;
+    --text-color: #111213;
+    --accent-color: #007a1c;
+    --border-color: #ced4da;
+    --nav-bg: #f8f9fa;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+html, body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    margin-bottom: 35px;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.text-theme {
+    color: var(--text-color) !important;
 }
 
-body {
-  margin-bottom: 60px;
+.text-accent {
+    color: var(--accent-color) !important;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.bg-nav {
+    background-color: var(--nav-bg) !important;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.workspace-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    height: 100%;
+    min-height: 300px;
+    overflow: auto;
+    position: relative;
+}
+
+.sidebar {
+    background-color: var(--nav-bg);
+    border-right: 1px solid var(--border-color);
+    min-height: calc(100vh - 56px);
+}
+
+.record-bar {
+    background-color: var(--nav-bg);
+    border-top: 2px solid var(--border-color);
+    height: 70px;
+    z-index: 1030;
+}
+
+/* БРОНЕБІЙНИЙ CSS ДЛЯ ТАБЛИЦЬ */
+.table, .table > :not(caption) > * > * {
+    background-color: transparent !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+    .table thead th {
+        border-bottom: 2px solid var(--accent-color) !important;
+        color: var(--accent-color) !important;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+    }
+
+.table-hover tbody tr:hover > * {
+    background-color: rgba(0, 255, 65, 0.05) !important;
+}
+
+.recording-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #555;
+    transition: 0.3s;
+}
+
+    .recording-dot.active {
+        background-color: #ff0000;
+        box-shadow: 0 0 8px #ff0000;
+    }
+
+.delete-btn {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #ff4444;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2rem;
+    z-index: 20;
+}
+
+.edit-mode .delete-btn {
+    display: block;
+}
+
+.edit-mode .workspace-card {
+    border-color: #ff4444;
 }
