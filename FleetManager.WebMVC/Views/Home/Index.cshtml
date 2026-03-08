@@ -31,7 +31,7 @@
                 <tbody>
                     @foreach (var log in (IEnumerable<FleetManager.Domain.Models.HardwareLog>)ViewBag.Logs)
                     {
-                        <tr><td>@log.CreatedAt.ToString("HH:mm")</td><td>@log.Robot?.Name</td><td>@log.Message</td></tr>
+                        <tr><td>@log.CreatedAt.ToLocalTime().ToString("HH:mm")</td><td>@log.Robot?.Name</td><td>@log.Message</td></tr>
                     }
                 </tbody>
             </table>
