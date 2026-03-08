@@ -23,7 +23,6 @@ public partial class FleetContext : DbContext
     public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<User> Users { get; set; }
 
-    // АВТОМАТИЗАЦІЯ ДАТ (CreatedAt / UpdatedAt)
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var entries = ChangeTracker.Entries()
@@ -31,7 +30,6 @@ public partial class FleetContext : DbContext
 
         foreach (var entityEntry in entries)
         {
-            // 1. Стираємо мітку часового поясу (щоб не було помилки з UTC у Postgres)
             var now = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
             if (entityEntry.State == EntityState.Added)
@@ -42,11 +40,9 @@ public partial class FleetContext : DbContext
                 }
             }
 
-            // Оновлюємо UpdatedAt і для нових, і для відредагованих записів
             if (entityEntry.Metadata.FindProperty("UpdatedAt") != null)
             {
                 entityEntry.Property("UpdatedAt").CurrentValue = now;
-                // 2. ПРИМУСОВО кажемо EF Core, що ми змінили цю дату і її ТРЕБА зберегти!
                 entityEntry.Property("UpdatedAt").IsModified = true;
             }
         }
@@ -56,7 +52,6 @@ public partial class FleetContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // 1. FIRMWARE
         modelBuilder.Entity<Firmware>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("firmware_pkey");
@@ -69,7 +64,6 @@ public partial class FleetContext : DbContext
                 .HasColumnName("release_date");
         });
 
-        // 2. LOG SEVERITY
         modelBuilder.Entity<LogSeverity>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("log_severity_pkey");
@@ -78,7 +72,6 @@ public partial class FleetContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(50).HasColumnName("name");
         });
 
-        // 3. POLICY
         modelBuilder.Entity<Policy>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("policies_pkey");
@@ -88,7 +81,6 @@ public partial class FleetContext : DbContext
             entity.Property(e => e.Description).HasColumnName("description");
         });
 
-        // 4. ROBOT STATUS
         modelBuilder.Entity<RobotStatus>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("robot_statuses_pkey");
@@ -97,7 +89,6 @@ public partial class FleetContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(50).HasColumnName("name");
         });
 
-        // 5. ROLE
         modelBuilder.Entity<Role>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("roles_pkey");
@@ -106,7 +97,6 @@ public partial class FleetContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(50).HasColumnName("name");
         });
 
-        // 6. USER
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("users_pkey");
@@ -126,7 +116,6 @@ public partial class FleetContext : DbContext
                 .HasForeignKey(d => d.RoleId).HasConstraintName("users_role_id_fkey");
         });
 
-        // 7. ROBOT
         modelBuilder.Entity<Robot>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("robots_pkey");
@@ -158,7 +147,6 @@ public partial class FleetContext : DbContext
                 .HasForeignKey(d => d.StatusId).HasConstraintName("robots_status_id_fkey");
         });
 
-        // 8. HARDWARE LOG
         modelBuilder.Entity<HardwareLog>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("hardware_logs_pkey");

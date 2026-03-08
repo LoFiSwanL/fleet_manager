@@ -19,14 +19,12 @@ namespace FleetManager.WebMVC.Controllers
             _context = context;
         }
 
-        // GET: Users
         public async Task<IActionResult> Index()
         {
             var fleetContext = _context.Users.Include(u => u.Role);
             return View(await fleetContext.ToListAsync());
         }
 
-        // GET: Users/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -45,16 +43,12 @@ namespace FleetManager.WebMVC.Controllers
             return View(user);
         }
 
-        // GET: Users/Create
         public IActionResult Create()
         {
             ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name");
             return View();
         }
 
-        // POST: Users/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Username,FullName,PasswordHash,RoleId,IsActive,CreatedAt,Id")] User user)
@@ -71,7 +65,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(user);
         }
 
-        // GET: Users/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -88,9 +81,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(user);
         }
 
-        // POST: Users/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Username,FullName,PasswordHash,RoleId,IsActive,CreatedAt,Id")] User user)
@@ -124,7 +114,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(user);
         }
 
-        // GET: Users/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -143,7 +132,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(user);
         }
 
-        // POST: Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

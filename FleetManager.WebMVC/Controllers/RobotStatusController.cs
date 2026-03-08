@@ -19,13 +19,11 @@ namespace FleetManager.WebMVC.Controllers
             _context = context;
         }
 
-        // GET: RobotStatus
         public async Task<IActionResult> Index()
         {
             return View(await _context.RobotStatuses.ToListAsync());
         }
 
-        // GET: RobotStatus/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -43,15 +41,11 @@ namespace FleetManager.WebMVC.Controllers
             return View(robotStatus);
         }
 
-        // GET: RobotStatus/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: RobotStatus/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Id")] RobotStatus robotStatus)
@@ -65,7 +59,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robotStatus);
         }
 
-        // GET: RobotStatus/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -81,9 +74,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robotStatus);
         }
 
-        // POST: RobotStatus/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Name,Id")] RobotStatus robotStatus)
@@ -116,7 +106,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robotStatus);
         }
 
-        // GET: RobotStatus/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -134,7 +123,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robotStatus);
         }
 
-        // POST: RobotStatus/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

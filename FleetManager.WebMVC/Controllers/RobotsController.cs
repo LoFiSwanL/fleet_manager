@@ -19,7 +19,6 @@ namespace FleetManager.WebMVC.Controllers
             _context = context;
         }
 
-        // GET: Robots
         public async Task<IActionResult> Index()
         {
             var fleetContext = _context.Robots
@@ -30,7 +29,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(await fleetContext.ToListAsync());
         }
 
-        // GET: Robots/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -47,7 +45,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robot);
         }
 
-        // GET: Robots/Create
         public IActionResult Create()
         {
             ViewData["FirmwareId"] = new SelectList(_context.Firmwares, "Id", "Version");
@@ -56,12 +53,10 @@ namespace FleetManager.WebMVC.Controllers
             return View();
         }
 
-        // POST: Robots/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,SerialNumber,StatusId,IpAddress,PolicyId,FirmwareId")] Robot robot)
         {
-            // Очищуємо валідацію для навігаційних властивостей
             ModelState.Remove("Firmware");
             ModelState.Remove("Policy");
             ModelState.Remove("Status");
@@ -69,7 +64,6 @@ namespace FleetManager.WebMVC.Controllers
             if (ModelState.IsValid)
             {
                 _context.Add(robot);
-                // Тут автоматично спрацює SaveChangesAsync і поставить дати
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
@@ -80,7 +74,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robot);
         }
 
-        // GET: Robots/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -94,7 +87,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robot);
         }
 
-        // POST: Robots/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,SerialNumber,StatusId,IpAddress,PolicyId,FirmwareId")] Robot robot)
@@ -109,11 +101,9 @@ namespace FleetManager.WebMVC.Controllers
             {
                 try
                 {
-                    // Важливо: завантажуємо існуючий запис, щоб не втратити CreatedAt
                     var robotToUpdate = await _context.Robots.FirstOrDefaultAsync(r => r.Id == id);
                     if (robotToUpdate == null) return NotFound();
 
-                    // Оновлюємо поля вручну
                     robotToUpdate.Name = robot.Name;
                     robotToUpdate.SerialNumber = robot.SerialNumber;
                     robotToUpdate.StatusId = robot.StatusId;
@@ -121,7 +111,6 @@ namespace FleetManager.WebMVC.Controllers
                     robotToUpdate.PolicyId = robot.PolicyId;
                     robotToUpdate.FirmwareId = robot.FirmwareId;
 
-                    // Зберігаємо. Спрацює автоматичне оновлення UpdatedAt у Context
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -138,7 +127,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robot);
         }
 
-        // GET: Robots/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -155,7 +143,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(robot);
         }
 
-        // POST: Robots/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

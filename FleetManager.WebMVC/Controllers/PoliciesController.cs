@@ -19,13 +19,11 @@ namespace FleetManager.WebMVC.Controllers
             _context = context;
         }
 
-        // GET: Policies
         public async Task<IActionResult> Index()
         {
             return View(await _context.Policies.ToListAsync());
         }
 
-        // GET: Policies/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -43,15 +41,11 @@ namespace FleetManager.WebMVC.Controllers
             return View(policy);
         }
 
-        // GET: Policies/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Policies/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Description,Id")] Policy policy)
@@ -65,7 +59,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(policy);
         }
 
-        // GET: Policies/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -81,9 +74,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(policy);
         }
 
-        // POST: Policies/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Name,Description,Id")] Policy policy)
@@ -116,7 +106,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(policy);
         }
 
-        // GET: Policies/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -134,7 +123,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(policy);
         }
 
-        // POST: Policies/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

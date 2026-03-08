@@ -49,7 +49,6 @@ function saveWorkspaceLayout() {
     localStorage.setItem('rlp_layout', JSON.stringify(layout));
 }
 
-// Запускає камеру для конкретного воркспейса
 function initSpecialWorkspaces(wrapper) {
     if (wrapper.getAttribute('data-ws-type') === 'camera') {
         let video = wrapper.querySelector('.local-camera');
@@ -69,7 +68,6 @@ function initSpecialWorkspaces(wrapper) {
     }
 }
 
-// Зупиняє використання камери при видаленні воркспейса
 function stopCamera(wrapper) {
     let video = wrapper.querySelector('.local-camera');
     if (video && video.srcObject) {
@@ -152,11 +150,9 @@ document.getElementById('btnSimulate')?.addEventListener('click', function () {
     btn.innerHTML = '> GENERATING...';
     btn.classList.add('disabled');
 
-    // Відправляємо запит на наш новий бекенд-метод
     fetch('/HardwareLogs/SimulateTelemetry', { method: 'POST' })
         .then(response => {
             if (response.ok) {
-                // Якщо успішно - оновлюємо сторінку, щоб побачити нові логи
                 setTimeout(() => {
                     window.location.reload();
                 }, 800);

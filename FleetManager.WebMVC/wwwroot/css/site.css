@@ -58,7 +58,6 @@ html, body {
     z-index: 1030;
 }
 
-/* БРОНЕБІЙНИЙ CSS ДЛЯ ТАБЛИЦЬ */
 .table, .table > :not(caption) > * > * {
     background-color: transparent !important;
     color: var(--text-color) !important;

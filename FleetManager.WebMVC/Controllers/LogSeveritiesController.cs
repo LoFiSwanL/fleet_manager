@@ -19,13 +19,11 @@ namespace FleetManager.WebMVC.Controllers
             _context = context;
         }
 
-        // GET: LogSeverities
         public async Task<IActionResult> Index()
         {
             return View(await _context.LogSeverities.ToListAsync());
         }
 
-        // GET: LogSeverities/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -43,15 +41,11 @@ namespace FleetManager.WebMVC.Controllers
             return View(logSeverity);
         }
 
-        // GET: LogSeverities/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: LogSeverities/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Id")] LogSeverity logSeverity)
@@ -65,7 +59,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(logSeverity);
         }
 
-        // GET: LogSeverities/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -81,9 +74,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(logSeverity);
         }
 
-        // POST: LogSeverities/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Name,Id")] LogSeverity logSeverity)
@@ -116,7 +106,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(logSeverity);
         }
 
-        // GET: LogSeverities/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -134,7 +123,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(logSeverity);
         }
 
-        // POST: LogSeverities/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

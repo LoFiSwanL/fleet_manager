@@ -19,18 +19,16 @@ namespace FleetManager.WebMVC.Controllers
             _context = context;
         }
 
-        // GET: HardwareLogs
         public async Task<IActionResult> Index()
         {
             var fleetContext = _context.HardwareLogs
                 .Include(h => h.Robot)
                 .Include(h => h.Severity)
                 .Include(h => h.User)
-                .AsNoTracking(); // Додано для швидкодії
+                .AsNoTracking();
             return View(await fleetContext.ToListAsync());
         }
 
-        // GET: HardwareLogs/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -47,7 +45,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(hardwareLog);
         }
 
-        // GET: HardwareLogs/Create
         public IActionResult Create()
         {
             ViewData["RobotId"] = new SelectList(_context.Robots, "Id", "Name");
@@ -56,7 +53,6 @@ namespace FleetManager.WebMVC.Controllers
             return View();
         }
 
-        // POST: HardwareLogs/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("RobotId,UserId,SeverityId,Message")] HardwareLog hardwareLog)
@@ -77,7 +73,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(hardwareLog);
         }
 
-        // GET: HardwareLogs/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -91,7 +86,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(hardwareLog);
         }
 
-        // POST: HardwareLogs/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,RobotId,UserId,SeverityId,Message")] HardwareLog hardwareLog)
@@ -129,7 +123,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(hardwareLog);
         }
 
-        // GET: HardwareLogs/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -146,7 +139,6 @@ namespace FleetManager.WebMVC.Controllers
             return View(hardwareLog);
         }
 
-        // POST: HardwareLogs/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -165,11 +157,9 @@ namespace FleetManager.WebMVC.Controllers
             return _context.HardwareLogs.Any(e => e.Id == id);
         }
 
-        // POST: HardwareLogs/SimulateTelemetry
         [HttpPost]
         public async Task<IActionResult> SimulateTelemetry()
         {
-            // Знаходимо всіх роботів і статуси
             var robots = await _context.Robots.ToListAsync();
             var severities = await _context.LogSeverities.ToListAsync();
 
@@ -185,7 +175,6 @@ namespace FleetManager.WebMVC.Controllers
                 "Object successfully grasped"
             };
 
-            // Генеруємо від 1 до 3 випадкових логів
             int logsToGenerate = random.Next(1, 4);
             for (int i = 0; i < logsToGenerate; i++)
             {
