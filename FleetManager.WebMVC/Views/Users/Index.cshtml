@@ -1,65 +1,75 @@
 ﻿@model IEnumerable<FleetManager.Domain.Models.User>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Operators";
 }
 
-<h1>Users</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="text-accent m-0">/OPERATORS_LIST</h4>
+    <a asp-action="Create" class="btn btn-outline-success btn-sm font-monospace">+ CREATE NEW</a>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Username)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FullName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PasswordHash)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Role)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Username)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FullName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PasswordHash)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsActive)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Role.Name)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger font-monospace mb-3" style="background-color: #220000; color: #ff4444; border: 1px solid #ff4444;">
+        @TempData["ErrorMessage"]
+    </div>
 }
-    </tbody>
-</table>
+
+<div class="workspace-card p-3">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Username)</th>
+                <th>@Html.DisplayNameFor(model => model.FullName)</th>
+                <th>@Html.DisplayNameFor(model => model.PasswordHash)</th>
+                <th>@Html.DisplayNameFor(model => model.IsActive)</th>
+                <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+                <th>@Html.DisplayNameFor(model => model.Role)</th>
+                <th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.Username)</td>
+                    <td>@Html.DisplayFor(modelItem => item.FullName)</td>
+
+                    <td class="text-muted font-monospace">
+                        ********
+                    </td>
+
+                    <td>
+                        @if (item.IsActive == true)
+                        {
+                            <span style="color:#00FF41; font-weight:bold;">[ ACTIVE ]</span>
+                        }
+                        else
+                        {
+                            <span style="color:red; font-weight:bold;">[ OFFLINE ]</span>
+                        }
+                    </td>
+
+                    <td>@(item.CreatedAt.HasValue? item.CreatedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "—")</td>
+
+                    <td>@Html.DisplayFor(modelItem => item.Role.Name)</td>
+
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="text-accent text-decoration-none">Edit</a> |
+                        <a asp-action="Details" asp-route-id="@item.Id" class="text-info text-decoration-none">Details</a> |
+
+                        @if (item.Username != null && item.Username.ToLower() == "admin")
+                        {
+                            <span class="text-muted" title="Protected System Account"><s>Delete</s></span>
+                        }
+                        else
+                        {
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger text-decoration-none">Delete</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

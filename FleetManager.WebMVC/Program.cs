@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore; 
-using FleetManager.Infrastructure; 
+using FleetManager.Infrastructure;
+using FleetManager.WebMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<FleetContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHostedService<TelemetrySimulatorService>();
 
 var app = builder.Build();
 

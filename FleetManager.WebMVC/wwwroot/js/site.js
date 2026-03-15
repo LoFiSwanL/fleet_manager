@@ -1,4 +1,5 @@
-﻿document.getElementById('themeToggle')?.addEventListener('click', () => {
+﻿
+document.getElementById('themeToggle')?.addEventListener('click', () => {
     document.body.classList.toggle('light-theme');
     localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
 });
@@ -24,24 +25,27 @@ document.getElementById('btnStart')?.addEventListener('click', () => {
     document.getElementById('btnStart').disabled = true;
     document.getElementById('btnSave').disabled = false;
     document.getElementById('btnDiscard').disabled = false;
+    console.log("[SYSTEM] Data acquisition started...");
 });
 
-function stopRecording() {
+function stopRecording(actionMessage) {
     clearInterval(timerInterval);
     document.getElementById('recordStatus').classList.remove('active');
     document.getElementById('recordTime').innerText = "00:00:00";
     document.getElementById('btnStart').disabled = false;
     document.getElementById('btnSave').disabled = true;
     document.getElementById('btnDiscard').disabled = true;
+    console.log(`[SYSTEM] Data acquisition ${actionMessage}.`);
 }
 
-document.getElementById('btnSave')?.addEventListener('click', stopRecording);
-document.getElementById('btnDiscard')?.addEventListener('click', stopRecording);
+document.getElementById('btnSave')?.addEventListener('click', () => stopRecording('saved'));
+document.getElementById('btnDiscard')?.addEventListener('click', () => stopRecording('discarded'));
 
-const grid = document.getElementById('workspace-grid');
 
 function saveWorkspaceLayout() {
+    let grid = document.getElementById('workspace-grid');
     if (!grid) return;
+
     let layout = [];
     grid.querySelectorAll('.workspace-wrapper').forEach(card => {
         layout.push(card.getAttribute('data-ws-type'));
@@ -54,7 +58,7 @@ function initSpecialWorkspaces(wrapper) {
         let video = wrapper.querySelector('.local-camera');
         let status = wrapper.querySelector('.cam-status');
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true })
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
                 .then(stream => {
                     video.srcObject = stream;
                     status.innerText = '[ SIGNAL: OK ]';
@@ -76,7 +80,9 @@ function stopCamera(wrapper) {
 }
 
 function loadWorkspaces() {
+    let grid = document.getElementById('workspace-grid');
     if (!grid) return;
+
     let savedLayout = localStorage.getItem('rlp_layout');
     let layout = savedLayout ? JSON.parse(savedLayout) : ['robots', 'logs', 'camera'];
 
@@ -124,7 +130,10 @@ document.addEventListener('click', function (e) {
 });
 
 document.getElementById('btnAddWorkspace')?.addEventListener('click', function () {
-    let currentCount = document.querySelectorAll('#workspace-grid .workspace-wrapper').length;
+    let grid = document.getElementById('workspace-grid');
+    if (!grid) return;
+
+    let currentCount = grid.querySelectorAll('.workspace-wrapper').length;
     if (currentCount >= 6) {
         showLimitWarning();
         return;
@@ -144,18 +153,32 @@ document.getElementById('btnEditWorkspaces')?.addEventListener('click', function
     document.getElementById('btnAddWorkspace').style.display = document.body.classList.contains('edit-mode') ? 'block' : 'none';
 });
 
-document.addEventListener("DOMContentLoaded", loadWorkspaces);
-document.getElementById('btnSimulate')?.addEventListener('click', function () {
-    let btn = this;
-    btn.innerHTML = '> GENERATING...';
-    btn.classList.add('disabled');
+function fetchLiveLogs() {
+    const logsWorkspace = document.querySelector('#workspace-grid .workspace-wrapper[data-ws-type="logs"]');
 
-    fetch('/HardwareLogs/SimulateTelemetry', { method: 'POST' })
-        .then(response => {
-            if (response.ok) {
-                setTimeout(() => {
-                    window.location.reload();
-                }, 800);
+    if (!logsWorkspace) return;
+
+    fetch('/HardwareLogs/GetRecentLogs')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = logsWorkspace.querySelector('tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+
+                data.forEach(log => {
+                    let msgStyle = log.message.includes('[AUTO]') ? 'color: var(--accent-color);' : '';
+
+                    tbody.innerHTML += `<tr>
+                        <td style="opacity: 0.7;">${log.time}</td>
+                        <td style="color: #00bcd4;">${log.robot}</td>
+                        <td style="${msgStyle}">${log.message}</td>
+                    </tr>`;
+                });
             }
-        });
-});
+        })
+        .catch(err => console.error("[SYSTEM] Live feed error:", err));
+}
+
+setInterval(fetchLiveLogs, 3000);
+
+document.addEventListener("DOMContentLoaded", loadWorkspaces);

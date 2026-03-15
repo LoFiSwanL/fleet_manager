@@ -48,7 +48,7 @@ namespace FleetManager.WebMVC.Controllers
         public IActionResult Create()
         {
             ViewData["RobotId"] = new SelectList(_context.Robots, "Id", "Name");
-            ViewData["SeverityId"] = new SelectList(_context.LogSeverities, "Id", "Name");
+            ViewData["SeverityId"] = new SelectList(_context.LogSeverities.Where(s => s.Name.ToLower() != "smth"), "Id", "Name");
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "Username");
             return View();
         }
@@ -157,38 +157,22 @@ namespace FleetManager.WebMVC.Controllers
             return _context.HardwareLogs.Any(e => e.Id == id);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SimulateTelemetry()
+        [HttpGet]
+        public async Task<IActionResult> GetRecentLogs()
         {
-            var robots = await _context.Robots.ToListAsync();
-            var severities = await _context.LogSeverities.ToListAsync();
+            var logsFromDb = await _context.HardwareLogs
+                .Include(h => h.Robot)
+                .OrderByDescending(l => l.CreatedAt)
+                .Take(8)
+                .ToListAsync();
 
-            if (!robots.Any() || !severities.Any()) return BadRequest("Немає роботів або статусів для симуляції");
+            var jsonLogs = logsFromDb.Select(l => new {
+                time = l.CreatedAt.ToLocalTime().ToString("HH:mm"),
+                robot = l.Robot != null ? l.Robot.Name : "Unknown",
+                message = l.Message
+            });
 
-            var random = new Random();
-            var mockMessages = new[] {
-                "Temperature spike in joint 3",
-                "Vision system latency > 50ms",
-                "Calibration required",
-                "Network signal weak",
-                "Battery level at 15%",
-                "Object successfully grasped"
-            };
-
-            int logsToGenerate = random.Next(1, 4);
-            for (int i = 0; i < logsToGenerate; i++)
-            {
-                var newLog = new HardwareLog
-                {
-                    RobotId = robots[random.Next(robots.Count)].Id,
-                    SeverityId = severities[random.Next(severities.Count)].Id,
-                    Message = mockMessages[random.Next(mockMessages.Length)]
-                };
-                _context.Add(newLog);
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(); 
+            return Json(jsonLogs);
         }
     } 
 }

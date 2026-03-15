@@ -28,22 +28,17 @@
                     <button id="btnEditWorkspaces" class="btn btn-sm btn-outline-secondary text-theme" style="font-size: 0.7rem;">EDIT</button>
                 </div>
                 <ul class="nav flex-column mb-4">
-                    <li class="nav-item mb-2"><a class="nav-link text-theme p-0" asp-controller="Robots" asp-action="Index">+ /UNITS</a></li>
+                    <li class="nav-item mb-2"><a class="nav-link text-theme p-0" asp-controller="Robots" asp-action="Index">+ /ROBOTS</a></li>
                     <li class="nav-item mb-2"><a class="nav-link text-theme p-0" asp-controller="HardwareLogs" asp-action="Index">+ /LOGS</a></li>
                     <li class="nav-item mb-2"><a class="nav-link text-theme p-0" asp-controller="Users" asp-action="Index">+ /OPERATORS</a></li>
 
                     <li class="nav-item mb-2 mt-3"><a class="nav-link text-secondary p-0" asp-controller="Policies" asp-action="Index">- Policies</a></li>
                     <li class="nav-item mb-2"><a class="nav-link text-secondary p-0" asp-controller="Firmwares" asp-action="Index">- Firmwares</a></li>
                     <li class="nav-item mb-2"><a class="nav-link text-secondary p-0" asp-controller="RobotStatus" asp-action="Index">- Statuses</a></li>
+                    <li class="nav-item mb-1"><a class="nav-link text-secondary p-0" asp-controller="LogSeverities" asp-action="Index">- Severities</a></li>
                 </ul>
 
                 <button id="btnAddWorkspace" class="btn btn-sm btn-outline-success w-100 mb-4" style="display: none;">+ ADD WORKSPACE</button>
-            </div>
-
-            <div class="mt-auto pt-4 border-top border-secondary w-100">
-                <button id="btnSimulate" class="btn btn-sm btn-outline-warning w-100 text-start font-monospace">
-                    > RUN_SIMULATION
-                </button>
             </div>
 
         </aside>

@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FleetManager.Domain.Models;
 using FleetManager.Infrastructure;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace FleetManager.WebMVC.Controllers
 {
@@ -51,12 +53,23 @@ namespace FleetManager.WebMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Username,FullName,PasswordHash,RoleId,IsActive,CreatedAt,Id")] User user)
+        public async Task<IActionResult> Create([Bind("Id,Username,PasswordHash,FullName,IsActive,RoleId")] User user)
         {
             ModelState.Remove("Role");
 
+            if (!string.IsNullOrEmpty(user.Username) && user.Username.Trim().ToLower() == "admin")
+            {
+                var adminExists = await _context.Users.AnyAsync(u => u.Username.ToLower() == "admin");
+                if (adminExists)
+                {
+                    ModelState.AddModelError("Username", "[ ПОМИЛКА ] Обліковий запис суперадміністратора вже існує!");
+                }
+            }
+
             if (ModelState.IsValid)
             {
+                user.PasswordHash = HashPassword(user.PasswordHash);
+
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -83,30 +96,46 @@ namespace FleetManager.WebMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Username,FullName,PasswordHash,RoleId,IsActive,CreatedAt,Id")] User user)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Username,PasswordHash,FullName,IsActive,RoleId")] User user)
         {
-            if (id != user.Id)
+            if (id != user.Id) return NotFound();
+
+            ModelState.Remove("Role");
+
+            // Захист від створення другого "admin"
+            if (!string.IsNullOrEmpty(user.Username) && user.Username.Trim().ToLower() == "admin")
             {
-                return NotFound();
+                var adminExists = await _context.Users.AnyAsync(u => u.Username.ToLower() == "admin" && u.Id != user.Id);
+                if (adminExists)
+                {
+                    ModelState.AddModelError("Username", "[ ПОМИЛКА ] Обліковий запис суперадміністратора вже існує!");
+                }
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(user);
+                    var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+                    if (userToUpdate == null) return NotFound();
+
+                    userToUpdate.Username = user.Username;
+
+                    if (!string.IsNullOrEmpty(user.PasswordHash) && user.PasswordHash.Length < 50)
+                    {
+                        userToUpdate.PasswordHash = HashPassword(user.PasswordHash);
+                    }
+
+                    userToUpdate.FullName = user.FullName;
+                    userToUpdate.IsActive = user.IsActive;
+                    userToUpdate.RoleId = user.RoleId;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserExists(user.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!UserExists(user.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -116,17 +145,18 @@ namespace FleetManager.WebMVC.Controllers
 
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
+
+            if (user == null) return NotFound();
+
+            if (user.Username.ToLower() == "admin")
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "[ СИСТЕМНА ПОМИЛКА ] Неможливо видалити кореневого адміністратора.";
+                return RedirectToAction(nameof(Index));
             }
 
             return View(user);
@@ -137,18 +167,35 @@ namespace FleetManager.WebMVC.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _context.Users.FindAsync(id);
+
             if (user != null)
             {
-                _context.Users.Remove(user);
-            }
+                if (user.Username.ToLower() == "admin")
+                {
+                    TempData["ErrorMessage"] = "[ КРИТИЧНА ПОМИЛКА ] Спроба несанкціонованого видалення суперадміна заблокована.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            await _context.SaveChangesAsync();
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));
         }
 
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.Id == id);
+        }
+
+        private string HashPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password)) return password;
+
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+            }
         }
     }
 }
