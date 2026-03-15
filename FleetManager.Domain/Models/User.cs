@@ -13,7 +13,9 @@ public partial class User : BaseEntity
     public string? FullName { get; set; }
 
     [Required]
-    public string PasswordHash { get; set; } = null!;
+    [Display(Name = "Password")]
+    [DataType(DataType.Password)]
+    public string PasswordHash { get; set; }
 
     public int? RoleId { get; set; }
 

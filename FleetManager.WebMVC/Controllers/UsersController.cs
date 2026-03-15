@@ -102,7 +102,11 @@ namespace FleetManager.WebMVC.Controllers
 
             ModelState.Remove("Role");
 
-            // Захист від створення другого "admin"
+            if (string.IsNullOrEmpty(user.PasswordHash))
+            {
+                ModelState.Remove("PasswordHash");
+            }
+
             if (!string.IsNullOrEmpty(user.Username) && user.Username.Trim().ToLower() == "admin")
             {
                 var adminExists = await _context.Users.AnyAsync(u => u.Username.ToLower() == "admin" && u.Id != user.Id);
@@ -196,6 +200,26 @@ namespace FleetManager.WebMVC.Controllers
                 var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
                 return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleStatus(int id, bool isActive)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Користувача не знайдено." });
+            }
+
+            if (user.Username != null && user.Username.ToLower() == "admin" && !isActive)
+            {
+                return Json(new { success = false, message = " Неможливо деактивувати суперадміністратора!" });
+            }
+
+            user.IsActive = isActive;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
         }
     }
 }

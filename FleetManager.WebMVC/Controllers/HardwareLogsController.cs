@@ -174,5 +174,17 @@ namespace FleetManager.WebMVC.Controllers
 
             return Json(jsonLogs);
         }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAll()
+        {
+            var allLogs = await _context.HardwareLogs.ToListAsync();
+
+            _context.HardwareLogs.RemoveRange(allLogs);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
     } 
 }

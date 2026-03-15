@@ -25,7 +25,7 @@ namespace FleetManager.WebMVC.Services
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                int delayMs = random.Next(5000, 180001);
+                int delayMs = random.Next(2000, 15000);
 
                 try
                 {

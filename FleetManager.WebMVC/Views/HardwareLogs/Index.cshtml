@@ -1,54 +1,82 @@
 ﻿@model IEnumerable<FleetManager.Domain.Models.HardwareLog>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "System Logs";
 }
 
-<h1>Hardware logs</h1>
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h4 class="text-accent m-0">/SYSTEM_LOGS</h4>
+    
+    <form asp-action="DeleteAll" method="post" id="purgeForm">
+        <button type="button" class="btn btn-outline-danger btn-sm font-monospace fw-bold" onclick="confirmPurge()">
+            [ PURGE ALL LOGS ]
+        </button>
+    </form>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Message)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Robot)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Severity)
-            </th>
-            
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Message)
-            </td>
-            <td>
-                @item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Robot.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Severity.Name)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+<div class="workspace-card p-3">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Message)</th>
+                <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+                <th>@Html.DisplayNameFor(model => model.Robot)</th>
+                <th>@Html.DisplayNameFor(model => model.Severity)</th>
+                <th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @if (item.Message != null && item.Message.Contains("[AUTO]"))
+                        {
+                            <span style="color: var(--accent-color);">@Html.DisplayFor(modelItem => item.Message)</span>
+                        }
+                        else
+                        {
+                            @Html.DisplayFor(modelItem => item.Message)
+                        }
+                    </td>
+                    <td class="text-muted font-monospace">
+                        @item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")
+                    </td>
+                    <td style="color: #00bcd4; font-weight: bold;">
+                        @Html.DisplayFor(modelItem => item.Robot.Name)
+                    </td>
+                    <td>
+                        @if (item.Severity?.Name?.ToUpper() == "ERROR" || item.Severity?.Name?.ToUpper() == "CRITICAL")
+                        {
+                            <span class="text-danger fw-bold">[@item.Severity.Name]</span>
+                        }
+                        else if (item.Severity?.Name?.ToUpper() == "WARNING")
+                        {
+                            <span class="text-warning fw-bold">[@item.Severity.Name]</span>
+                        }
+                        else
+                        {
+                            <span style="color: #00FF41;" class="fw-bold">[@item.Severity?.Name]</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="text-info text-decoration-none">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger text-decoration-none">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmPurge() {
+            if (confirm("[ СИСТЕМНЕ ПОПЕРЕДЖЕННЯ ]\nВи збираєтесь очистити всю базу логів телеметрії.\nПродовжити?")) {
+                if (confirm("[ КРИТИЧНА ДІЯ ]\n Дані будуть втрачені назавжди.\nВи абсолютно впевнені?")) {
+                    document.getElementById('purgeForm').submit();
+                }
+            }
+        }
+    </script>
 }
-    </tbody>
-</table>

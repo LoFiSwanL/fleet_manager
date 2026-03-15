@@ -182,3 +182,32 @@ function fetchLiveLogs() {
 setInterval(fetchLiveLogs, 3000);
 
 document.addEventListener("DOMContentLoaded", loadWorkspaces);
+
+
+document.addEventListener('change', function (e) {
+    if (e.target.classList.contains('status-dropdown')) {
+        const selectElement = e.target;
+        const userId = selectElement.getAttribute('data-user-id');
+        const isActive = selectElement.value === 'true';
+
+        selectElement.style.color = isActive ? '#00FF41' : '#ff4444';
+
+        fetch(`/Users/ToggleStatus?id=${userId}&isActive=${isActive}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert(data.message);
+                    selectElement.value = (!isActive).toString();
+                    selectElement.style.color = !isActive ? '#00FF41' : '#ff4444';
+                } else {
+                    console.log(`[SYSTEM] Operator ID:${userId} status updated to ${isActive ? 'ACTIVE' : 'OFFLINE'}`);
+                }
+            })
+            .catch(err => console.error("[SYSTEM] Status update failed:", err));
+    }
+});

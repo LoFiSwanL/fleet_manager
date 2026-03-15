@@ -41,13 +41,26 @@
                     </td>
 
                     <td>
-                        @if (item.IsActive == true)
+                        @if (item.Username != null && item.Username.ToLower() == "admin")
                         {
                             <span style="color:#00FF41; font-weight:bold;">[ ACTIVE ]</span>
                         }
                         else
                         {
-                            <span style="color:red; font-weight:bold;">[ OFFLINE ]</span>
+                            <select class="form-select form-select-sm status-dropdown"
+                                    data-user-id="@item.Id"
+                                    style="background-color: transparent; border: 1px solid var(--border-color); color: @(item.IsActive == true ? "#00FF41" : "#ff4444"); font-weight: bold; width: 120px; cursor: pointer;">
+                                @if (item.IsActive == true)
+                                {
+                                    <option value="true" selected style="color:#00FF41; background-color: #1a1a1a;">[ ACTIVE ]</option>
+                                    <option value="false" style="color:#ff4444; background-color: #1a1a1a;">[ OFFLINE ]</option>
+                                }
+                                else
+                                {
+                                    <option value="true" style="color:#00FF41; background-color: #1a1a1a;">[ ACTIVE ]</option>
+                                    <option value="false" selected style="color:#ff4444; background-color: #1a1a1a;">[ OFFLINE ]</option>
+                                }
+                            </select>
                         }
                     </td>
 
