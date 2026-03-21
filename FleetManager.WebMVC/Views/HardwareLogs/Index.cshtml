@@ -3,6 +3,22 @@
 @{
     ViewData["Title"] = "System Logs";
 }
+<style>
+    div.google-visualization-tooltip {
+        pointer-events: none !important;
+        z-index: 1000 !important;
+        background-color: #1a1a1a !important;
+        border: 1px solid #00FF41 !important;
+        box-shadow: 0 0 10px rgba(0, 255, 65, 0.2) !important;
+        border-radius: 4px !important;
+        padding: 8px !important;
+        font-family: monospace !important;
+    }
+    
+        div.google-visualization-tooltip span {
+            color: #e0e0e0 !important;
+        }
+</style>
 
 <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
     <h4 class="text-accent m-0">SYSTEM_LOGS</h4>
@@ -13,7 +29,18 @@
         </button>
     </form>
 </div>
-
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="workspace-card p-3 d-flex justify-content-center align-items-center" style="height: 300px;">
+            <div id="severityChart" style="width: 100%; height: 100%;"></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="workspace-card p-3 d-flex justify-content-center align-items-center" style="height: 300px;">
+            <div id="robotChart" style="width: 100%; height: 100%;"></div>
+        </div>
+    </div>
+</div>
 <div class="workspace-card p-3">
     <table class="table table-hover">
         <thead>
@@ -46,7 +73,7 @@
                         @Html.DisplayFor(modelItem => item.Robot.Name)
                     </td>
                     <td>
-                        @if (item.Severity?.Name?.ToUpper() == "ERROR" || item.Severity?.Name?.ToUpper() == "CRITICAL")
+                        @if (item.Severity?.Name?.ToUpper() == "ERROR" || item.Severity?.Name?.ToUpper() == "CRITICAL" || item.Severity?.Name?.ToUpper() == "FATAL")
                         {
                             <span class="text-danger fw-bold">[@item.Severity.Name]</span>
                         }
@@ -70,13 +97,81 @@
 </div>
 
 @section Scripts {
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
     <script>
         function confirmPurge() {
             if (confirm("[ СИСТЕМНЕ ПОПЕРЕДЖЕННЯ ]\nВи збираєтесь очистити всю базу логів телеметрії.\nПродовжити?")) {
-                if (confirm("[ КРИТИЧНА ДІЯ ]\n Дані будуть втрачені назавжди.\nВи абсолютно впевнені?")) {
+                if (confirm("[ КРИТИЧНА ДІЯ ]\nЦю дію неможливо скасувати. Дані будуть втрачені назавжди.\nВи абсолютно впевнені?")) {
                     document.getElementById('purgeForm').submit();
                 }
             }
+        }
+
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawAllCharts);
+
+        function drawAllCharts() {
+            drawSeverityChart();
+            drawRobotChart();
+        }
+
+        const chartOptions = {
+            backgroundColor: 'transparent',
+            titleTextStyle: { color: '#00FF41', fontName: 'monospace', fontSize: 16 },
+            legend: { textStyle: { color: '#aaa', fontName: 'monospace' } },
+            chartArea: { width: '80%', height: '70%' },
+            tooltip: { isHtml: true }
+        };
+
+        function drawSeverityChart() {
+            fetch('/api/charts/logsBySeverity') 
+                .then(response => response.json())
+                .then(data => {
+                    const dataTable = new google.visualization.DataTable();
+                    dataTable.addColumn('string', 'Рівень');
+                    dataTable.addColumn('number', 'Кількість');
+
+                    data.forEach(item => {
+                        dataTable.addRow([item.severityName, item.count]);
+                    });
+
+                    const options = {
+                        ...chartOptions,
+                        title: 'SYSTEM HEALTH (SEVERITY RATIO)',
+                        pieHole: 0.4,
+                        colors: ['#00FF41', '#ff4444', '#ffbb33', '#00bcd4'] 
+                    };
+
+                    const chart = new google.visualization.PieChart(document.getElementById('severityChart'));
+                    chart.draw(dataTable, options);
+                });
+        }
+
+        function drawRobotChart() {
+            fetch('/api/charts/logsByRobot')
+                .then(response => response.json())
+                .then(data => {
+                    const dataTable = new google.visualization.DataTable();
+                    dataTable.addColumn('string', 'Робот');
+                    dataTable.addColumn('number', 'Інциденти');
+
+                    data.forEach(item => {
+                        dataTable.addRow([item.robotName, item.count]);
+                    });
+
+                    const options = {
+                        ...chartOptions,
+                        title: 'INCIDENTS PER UNIT',
+                        legend: { position: 'none' },
+                        hAxis: { textStyle: { color: '#00bcd4', fontName: 'monospace' } },
+                        vAxis: { textStyle: { color: '#aaa' }, gridlines: { color: '#333' } },
+                        colors: ['#00bcd4']
+                    };
+
+                    const chart = new google.visualization.ColumnChart(document.getElementById('robotChart'));
+                    chart.draw(dataTable, options); 
+                });
         }
     </script>
 }
