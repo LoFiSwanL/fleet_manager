@@ -24,8 +24,8 @@ namespace FleetManager.WebMVC.Controllers
             var fleetContext = _context.HardwareLogs
                 .Include(h => h.Robot)
                 .Include(h => h.Severity)
-                .Include(h => h.User)
-                .AsNoTracking();
+                .OrderByDescending(h => h.CreatedAt);
+
             return View(await fleetContext.ToListAsync());
         }
 

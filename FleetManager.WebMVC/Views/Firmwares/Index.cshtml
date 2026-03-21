@@ -4,11 +4,10 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Firmware</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="text-accent m-0">Firmware</h4>
+    <a asp-action="Create" class="btn btn-outline-success btn-sm font-monospace">+ CREATE NEW</a>
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -18,7 +17,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.ReleaseDate)
             </th>
-            <th></th>
+            <th>ACTIONS</th>
         </tr>
     </thead>
     <tbody>
@@ -30,11 +29,11 @@
             <td>
                 @Html.DisplayFor(modelItem => item.ReleaseDate)
             </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="text-accent text-decoration-none">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger text-decoration-none">Delete</a>
+
+                </td>
         </tr>
 }
     </tbody>

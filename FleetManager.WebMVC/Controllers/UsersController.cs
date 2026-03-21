@@ -131,7 +131,6 @@ namespace FleetManager.WebMVC.Controllers
                     }
 
                     userToUpdate.FullName = user.FullName;
-                    userToUpdate.IsActive = user.IsActive;
                     userToUpdate.RoleId = user.RoleId;
 
                     await _context.SaveChangesAsync();
