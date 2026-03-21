@@ -153,8 +153,8 @@
                 .then(response => response.json())
                 .then(data => {
                     const dataTable = new google.visualization.DataTable();
-                    dataTable.addColumn('string', 'Робот');
-                    dataTable.addColumn('number', 'Інциденти');
+                    dataTable.addColumn('string', 'Robots');
+                    dataTable.addColumn('number', 'Incidents');
 
                     data.forEach(item => {
                         dataTable.addRow([item.robotName, item.count]);
