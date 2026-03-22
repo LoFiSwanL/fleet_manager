@@ -47,9 +47,10 @@ namespace FleetManager.WebMVC.Controllers
 
         public IActionResult Create()
         {
-            ViewData["FirmwareId"] = new SelectList(_context.Firmwares, "Id", "Version");
-            ViewData["PolicyId"] = new SelectList(_context.Policies, "Id", "Name");
-            ViewData["StatusId"] = new SelectList(_context.RobotStatuses, "Id", "Name");
+            ViewData["FirmwareId"] = new SelectList(_context.Firmwares.Where(f => !f.IsDeleted), "Id", "Version");
+            ViewData["PolicyId"] = new SelectList(_context.Policies.Where(p => !p.IsDeleted), "Id", "Name");
+            ViewData["StatusId"] = new SelectList(_context.RobotStatuses.Where(s => !s.IsDeleted), "Id", "Name");
+
             return View();
         }
 
@@ -68,9 +69,9 @@ namespace FleetManager.WebMVC.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["FirmwareId"] = new SelectList(_context.Firmwares, "Id", "Version", robot.FirmwareId);
-            ViewData["PolicyId"] = new SelectList(_context.Policies, "Id", "Name", robot.PolicyId);
-            ViewData["StatusId"] = new SelectList(_context.RobotStatuses, "Id", "Name", robot.StatusId);
+            ViewData["FirmwareId"] = new SelectList(_context.Firmwares.Where(f => !f.IsDeleted), "Id", "Version");
+            ViewData["PolicyId"] = new SelectList(_context.Policies.Where(p => !p.IsDeleted), "Id", "Name");
+            ViewData["StatusId"] = new SelectList(_context.RobotStatuses.Where(s => !s.IsDeleted), "Id", "Name");
             return View(robot);
         }
 
@@ -81,9 +82,9 @@ namespace FleetManager.WebMVC.Controllers
             var robot = await _context.Robots.FindAsync(id);
             if (robot == null) return NotFound();
 
-            ViewData["FirmwareId"] = new SelectList(_context.Firmwares, "Id", "Version", robot.FirmwareId);
-            ViewData["PolicyId"] = new SelectList(_context.Policies, "Id", "Name", robot.PolicyId);
-            ViewData["StatusId"] = new SelectList(_context.RobotStatuses, "Id", "Name", robot.StatusId);
+            ViewData["FirmwareId"] = new SelectList(_context.Firmwares.Where(f => !f.IsDeleted), "Id", "Version");
+            ViewData["PolicyId"] = new SelectList(_context.Policies.Where(p => !p.IsDeleted), "Id", "Name");
+            ViewData["StatusId"] = new SelectList(_context.RobotStatuses.Where(s => !s.IsDeleted), "Id", "Name");
             return View(robot);
         }
 
@@ -121,9 +122,9 @@ namespace FleetManager.WebMVC.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["FirmwareId"] = new SelectList(_context.Firmwares, "Id", "Version", robot.FirmwareId);
-            ViewData["PolicyId"] = new SelectList(_context.Policies, "Id", "Name", robot.PolicyId);
-            ViewData["StatusId"] = new SelectList(_context.RobotStatuses, "Id", "Name", robot.StatusId);
+            ViewData["FirmwareId"] = new SelectList(_context.Firmwares.Where(f => !f.IsDeleted), "Id", "Version");
+            ViewData["PolicyId"] = new SelectList(_context.Policies.Where(p => !p.IsDeleted), "Id", "Name");
+            ViewData["StatusId"] = new SelectList(_context.RobotStatuses.Where(s => !s.IsDeleted), "Id", "Name");
             return View(robot);
         }
 

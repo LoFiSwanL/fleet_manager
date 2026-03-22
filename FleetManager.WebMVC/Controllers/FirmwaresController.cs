@@ -21,7 +21,11 @@ namespace FleetManager.WebMVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Firmwares.ToListAsync());
+            var activeFirmwares = await _context.Firmwares
+         .Where(f => !f.IsDeleted)
+         .ToListAsync();
+
+            return View(activeFirmwares);
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -130,16 +134,16 @@ namespace FleetManager.WebMVC.Controllers
             var firmware = await _context.Firmwares.FindAsync(id);
             if (firmware != null)
             {
-                _context.Firmwares.Remove(firmware);
+                firmware.IsDeleted = true;
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool FirmwareExists(int id)
         {
-            return _context.Firmwares.Any(e => e.Id == id);
+            return _context.Firmwares.Any(e => e.Id == id && !e.IsDeleted);
         }
     }
 }

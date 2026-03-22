@@ -21,7 +21,7 @@ namespace FleetManager.WebMVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View(await _context.LogSeverities.ToListAsync());
+            return View(await _context.LogSeverities.Where(x => !x.IsDeleted).ToListAsync());
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -127,10 +127,10 @@ namespace FleetManager.WebMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var logSeverity = await _context.LogSeverities.FindAsync(id);
-            if (logSeverity != null)
+            var item = await _context.LogSeverities.FindAsync(id);
+            if (item != null)
             {
-                _context.LogSeverities.Remove(logSeverity);
+                item.IsDeleted = true;
             }
 
             await _context.SaveChangesAsync();

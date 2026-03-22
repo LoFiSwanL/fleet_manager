@@ -21,7 +21,7 @@ namespace FleetManager.WebMVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View(await _context.RobotStatuses.ToListAsync());
+            return View(await _context.RobotStatuses.Where(x => !x.IsDeleted).ToListAsync());
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -127,10 +127,10 @@ namespace FleetManager.WebMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var robotStatus = await _context.RobotStatuses.FindAsync(id);
-            if (robotStatus != null)
+            var item = await _context.RobotStatuses.FindAsync(id);
+            if (item != null)
             {
-                _context.RobotStatuses.Remove(robotStatus);
+                item.IsDeleted = true;
             }
 
             await _context.SaveChangesAsync();

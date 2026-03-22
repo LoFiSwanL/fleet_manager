@@ -10,4 +10,6 @@ public partial class Firmware : BaseEntity
     public DateTime ReleaseDate { get; set; } = DateTime.UtcNow;
 
     public virtual ICollection<Robot> Robots { get; set; } = new List<Robot>();
+
+    public bool IsDeleted { get; set; } = false;
 }

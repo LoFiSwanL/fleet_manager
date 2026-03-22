@@ -10,4 +10,6 @@ public partial class Policy : BaseEntity
     public string? Description { get; set; }
 
     public virtual ICollection<Robot> Robots { get; set; } = new List<Robot>();
+
+    public bool IsDeleted { get; set; } = false;
 }

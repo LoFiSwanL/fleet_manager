@@ -21,11 +21,16 @@
 
     <div class="d-flex w-100">
         <aside class="sidebar p-3 d-none d-md-flex flex-column" style="width: 250px;">
-
+            @{
+                var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+            }
             <div class="w-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h6 class="text-accent m-0">WORKSPACES</h6>
-                    <button id="btnEditWorkspaces" class="btn btn-sm btn-outline-secondary text-theme" style="font-size: 0.7rem;">EDIT</button>
+                    @if (currentController == "Home")
+                    {
+                        <button id="btnEditWorkspaces" class="btn btn-sm btn-outline-secondary text-theme" style="font-size: 0.7rem;">EDIT</button>
+                    }
                 </div>
                 <ul class="nav flex-column mb-4">
                     <li class="nav-item mb-2"><a class="nav-link text-theme p-0" asp-controller="Robots" asp-action="Index">+ ROBOTS</a></li>
@@ -38,7 +43,10 @@
                     <li class="nav-item mb-1"><a class="nav-link text-secondary p-0" asp-controller="LogSeverities" asp-action="Index">- Severities</a></li>
                 </ul>
 
-                <button id="btnAddWorkspace" class="btn btn-sm btn-outline-success w-100 mb-4" style="display: none;">+ ADD WORKSPACE</button>
+                @if (currentController == "Home")
+                {
+                    <button id="btnAddWorkspace" class="btn btn-sm btn-outline-success w-100 mb-4" style="display: none;">+ ADD WORKSPACE</button>
+                }
             </div>
 
         </aside>

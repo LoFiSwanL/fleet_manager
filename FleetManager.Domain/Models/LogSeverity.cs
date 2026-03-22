@@ -8,4 +8,6 @@ public partial class LogSeverity : BaseEntity
     public string Name { get; set; } = null!;
 
     public virtual ICollection<HardwareLog> HardwareLogs { get; set; } = new List<HardwareLog>();
+
+    public bool IsDeleted { get; set; } = false;
 }
