@@ -1,0 +1,42 @@
+﻿@{
+    ViewData["Title"] = "Robots import";
+}
+
+<h1>Імпорт бази роботів</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Оберіть Excel-файл для завантаження</h5>
+                <p class="text-muted">Формат файлу: .xlsx</p>
+                
+                @using (Html.BeginForm("Import", "Robots", FormMethod.Post, new { enctype = "multipart/form-data", id = "frm-excel" }))
+                {
+                    <div class="form-group mb-3">
+                        <input type="file" name="fileExcel" id="fileExcel" class="form-control" accept=".xlsx" required />
+                    </div>
+                    <div class="form-group">
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Що робити, якщо робот вже існує?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="duplicateHandling" id="skip" value="skip" checked>
+                                <label class="form-check-label" for="skip">
+                                    Пропустити (додати лише нових)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="duplicateHandling" id="overwrite" value="overwrite">
+                                <label class="form-check-label" for="overwrite">
+                                    Оновити дані існуючих роботів
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Завантажити</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Скасувати</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

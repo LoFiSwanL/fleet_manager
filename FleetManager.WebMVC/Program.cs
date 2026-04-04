@@ -1,12 +1,14 @@
-using Microsoft.EntityFrameworkCore; 
 using FleetManager.Infrastructure;
+using FleetManager.Infrastructure.Services;
 using FleetManager.WebMVC.Services;
+using Microsoft.EntityFrameworkCore; 
 
 var builder = WebApplication.CreateBuilder(args);
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IDataPortServiceFactory<FleetManager.Domain.Models.Robot>, FleetManager.Infrastructure.Services.DataPortServiceFactory>();
 
 builder.Services.AddDbContext<FleetContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

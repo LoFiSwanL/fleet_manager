@@ -6,7 +6,12 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="text-accent m-0">ROBOTS</h4>
-    <a asp-action="Create" class="btn btn-outline-success btn-sm font-monospace">+ CREATE NEW</a>
+    <p>
+        <a asp-action="Create" class="btn btn-outline-success btn-sm font-monospace">+ CREATE NEW</a>
+    
+        <a asp-action="Import" class="btn btn-outline-success btn-sm font-monospace">Import file</a>
+        <a asp-action="Export" class="btn btn-outline-success btn-sm font-monospace">Export in file</a>
+    </p>
 </div>
 <table class="table">
     <thead>

@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FleetManager.Domain.Models;
 using FleetManager.Infrastructure;
+using FleetManager.Infrastructure.Services;
 
 namespace FleetManager.WebMVC.Controllers
 {
     public class RobotsController : Controller
     {
         private readonly FleetContext _context;
+        private readonly IDataPortServiceFactory<Robot> _dataPortServiceFactory;
 
-        public RobotsController(FleetContext context)
+        public RobotsController(FleetContext context, IDataPortServiceFactory<Robot> dataPortServiceFactory)
         {
             _context = context;
+            _dataPortServiceFactory = dataPortServiceFactory;
         }
 
         public async Task<IActionResult> Index()
@@ -161,6 +164,50 @@ namespace FleetManager.WebMVC.Controllers
         private bool RobotExists(int id)
         {
             return _context.Robots.Any(e => e.Id == id);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Export([FromQuery] string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            CancellationToken cancellationToken = default)
+        {
+            var exportService = _dataPortServiceFactory.GetExportService(contentType);
+            var memoryStream = new MemoryStream();
+
+            await exportService.WriteToAsync(memoryStream, cancellationToken);
+            await memoryStream.FlushAsync(cancellationToken);
+            memoryStream.Position = 0;
+
+            return new FileStreamResult(memoryStream, contentType)
+            {
+                FileDownloadName = $"robots_{DateTime.UtcNow.ToShortDateString()}.xlsx"
+            };
+        }
+
+        [HttpGet]
+        public IActionResult Import()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Import(IFormFile fileExcel, string duplicateHandling, CancellationToken cancellationToken = default)
+        {
+            if (fileExcel == null || fileExcel.Length == 0)
+            {
+                ModelState.AddModelError("", "Будь ласка, оберіть файл для завантаження.");
+                return View();
+            }
+
+            bool updateExisting = (duplicateHandling == "overwrite");
+
+            var importService = _dataPortServiceFactory.GetImportService(fileExcel.ContentType);
+            using var stream = fileExcel.OpenReadStream();
+
+            await importService.ImportFromStreamAsync(stream, updateExisting, cancellationToken);
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
