@@ -175,7 +175,7 @@ namespace FleetManager.WebMVC.Controllers
             var memoryStream = new MemoryStream();
 
             await exportService.WriteToAsync(memoryStream, cancellationToken);
-            await memoryStream.FlushAsync(cancellationToken);
+            memoryStream.Flush();
             memoryStream.Position = 0;
 
             return new FileStreamResult(memoryStream, contentType)
