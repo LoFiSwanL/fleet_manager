@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+﻿using ClosedXML.Excel;
 using FleetManager.Domain.Models;
 using FleetManager.Infrastructure;
 using FleetManager.Infrastructure.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FleetManager.WebMVC.Controllers
 {
@@ -232,6 +233,36 @@ namespace FleetManager.WebMVC.Controllers
                 ModelState.AddModelError("", $"Системна помилка при читанні файлу: {ex.Message}");
                 return View();
             }
+        }
+
+        [HttpGet]
+        public IActionResult DownloadTemplate()
+        {
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Template");
+
+            var headers = new string[]
+            {
+        "Name", "Serial Number", "IP Address", "Status Name", "Firmware Version", "Policy Name"
+            };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                worksheet.Cell(1, i + 1).Value = headers[i];
+            }
+
+            worksheet.Row(1).Style.Font.Bold = true;
+            worksheet.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var content = stream.ToArray();
+
+            return File(
+                content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "robots_template.xlsx"
+            );
         }
     }
 }

@@ -43,7 +43,6 @@ namespace FleetManager.Infrastructure.Services
                     return result;
                 }
 
-                // 1. ВАЛІДАЦІЯ ЗАГОЛОВКІВ (зупиняємось на першій же помилці)
                 var headerRow = worksheet.Row(1);
                 for (int i = 0; i < ExpectedHeaders.Count; i++)
                 {
@@ -51,20 +50,17 @@ namespace FleetManager.Infrastructure.Services
                     if (!string.Equals(cellValue, ExpectedHeaders[i], StringComparison.OrdinalIgnoreCase))
                     {
                         result.Errors.Add($"Імпорт скасовано. Помилка структури: на позиції {i + 1} очікувався стовпець '{ExpectedHeaders[i]}', а знайдено '{cellValue}'.");
-                        break; // ЗУПИНЯЄМО ЦИКЛ! Більше спаму не буде
+                        break; 
                     }
                 }
 
-                // Якщо знайшли помилку в заголовках - одразу виходимо
                 if (!result.Success) return result;
 
-                // 2. ЧИТАННЯ РЯДКІВ
                 int rowIndex = 2;
                 foreach (var row in worksheet.RowsUsed().Skip(1))
                 {
                     bool rowSuccess = await AddRobotAsync(row, updateExisting, result, rowIndex, cancellationToken);
 
-                    // Якщо під час читання рядка виникла помилка - зупиняємо весь імпорт!
                     if (!result.Success)
                     {
                         break;
@@ -78,7 +74,6 @@ namespace FleetManager.Infrastructure.Services
                 }
             }
 
-            // 3. ЗБЕРЕЖЕННЯ В БАЗУ (ТІЛЬКИ ЯКЩО НЕМАЄ ЖОДНОЇ ПОМИЛКИ)
             if (result.Success && result.ImportedCount > 0)
             {
                 await _context.SaveChangesAsync(cancellationToken);
@@ -96,10 +91,8 @@ namespace FleetManager.Infrastructure.Services
             string firmwareVersion = row.Cell(5).Value.ToString().Trim();
             string policyName = row.Cell(6).Value.ToString().Trim();
 
-            // Якщо рядок повністю порожній - просто пропускаємо
             if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(serialNumber)) return false;
 
-            // --- КОРОТКА ВАЛІДАЦІЯ РЯДКА ---
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(serialNumber))
             {
                 result.Errors.Add($"Імпорт скасовано. У рядку {rowIndex} пропущено обов'язкове поле (Name або Serial Number).");

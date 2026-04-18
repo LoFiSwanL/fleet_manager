@@ -8,8 +8,13 @@
     <div class="col-md-6">
         <div class="card mt-4">
             <div class="card-body">
-                <h5 class="card-title">Оберіть Excel-файл для завантаження</h5>
-                <p class="text-muted">Формат файлу: .xlsx</p>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <p class="text-muted mb-0">Формат файлу: .xlsx</p>
+    
+                    <a asp-action="DownloadTemplate" class="btn btn-sm btn-outline-success">
+                        📥 Завантажити порожній шаблон
+                    </a>
+                </div>
                 
                 @using (Html.BeginForm("Import", "Robots", FormMethod.Post, new { enctype = "multipart/form-data", id = "frm-excel" }))
                 {
