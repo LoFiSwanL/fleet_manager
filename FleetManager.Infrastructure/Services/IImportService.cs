@@ -6,6 +6,6 @@ namespace FleetManager.Infrastructure.Services
 {
     public interface IImportService<TEntity> where TEntity : class
     {
-        Task ImportFromStreamAsync(Stream stream, bool updateExisting, CancellationToken cancellationToken);
+        Task<ImportResult> ImportFromStreamAsync(Stream stream, bool updateExisting, CancellationToken cancellationToken);
     }
 }

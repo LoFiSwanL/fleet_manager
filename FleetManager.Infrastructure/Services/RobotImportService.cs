@@ -2,6 +2,7 @@
 using FleetManager.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -13,42 +14,97 @@ namespace FleetManager.Infrastructure.Services
     {
         private readonly FleetContext _context;
 
+        private static readonly IReadOnlyList<string> ExpectedHeaders = new string[]
+        {
+            "Name", "Serial Number", "IP Address", "Status Name", "Firmware Version", "Policy Name"
+        };
+
         public RobotImportService(FleetContext context)
         {
             _context = context;
         }
 
-        public async Task ImportFromStreamAsync(Stream stream, bool updateExisting, CancellationToken cancellationToken)
+        public async Task<ImportResult> ImportFromStreamAsync(Stream stream, bool updateExisting, CancellationToken cancellationToken)
         {
+            var result = new ImportResult();
+
             if (!stream.CanRead)
             {
-                throw new ArgumentException("Дані не можуть бути прочитані", nameof(stream));
+                result.Errors.Add("Помилка доступу: файл неможливо прочитати.");
+                return result;
             }
 
             using (XLWorkbook workBook = new XLWorkbook(stream))
             {
                 var worksheet = workBook.Worksheets.FirstOrDefault();
-                if (worksheet == null) return;
+                if (worksheet == null)
+                {
+                    result.Errors.Add("Файл порожній: не знайдено жодного аркуша.");
+                    return result;
+                }
 
+                // 1. ВАЛІДАЦІЯ ЗАГОЛОВКІВ (зупиняємось на першій же помилці)
+                var headerRow = worksheet.Row(1);
+                for (int i = 0; i < ExpectedHeaders.Count; i++)
+                {
+                    var cellValue = headerRow.Cell(i + 1).Value.ToString().Trim();
+                    if (!string.Equals(cellValue, ExpectedHeaders[i], StringComparison.OrdinalIgnoreCase))
+                    {
+                        result.Errors.Add($"Імпорт скасовано. Помилка структури: на позиції {i + 1} очікувався стовпець '{ExpectedHeaders[i]}', а знайдено '{cellValue}'.");
+                        break; // ЗУПИНЯЄМО ЦИКЛ! Більше спаму не буде
+                    }
+                }
+
+                // Якщо знайшли помилку в заголовках - одразу виходимо
+                if (!result.Success) return result;
+
+                // 2. ЧИТАННЯ РЯДКІВ
+                int rowIndex = 2;
                 foreach (var row in worksheet.RowsUsed().Skip(1))
                 {
-                    await AddRobotAsync(row, updateExisting, cancellationToken);
+                    bool rowSuccess = await AddRobotAsync(row, updateExisting, result, rowIndex, cancellationToken);
+
+                    // Якщо під час читання рядка виникла помилка - зупиняємо весь імпорт!
+                    if (!result.Success)
+                    {
+                        break;
+                    }
+
+                    if (rowSuccess)
+                    {
+                        result.ImportedCount++;
+                    }
+                    rowIndex++;
                 }
             }
 
-            await _context.SaveChangesAsync(cancellationToken);
+            // 3. ЗБЕРЕЖЕННЯ В БАЗУ (ТІЛЬКИ ЯКЩО НЕМАЄ ЖОДНОЇ ПОМИЛКИ)
+            if (result.Success && result.ImportedCount > 0)
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
+            return result;
         }
 
-        private async Task AddRobotAsync(IXLRow row, bool updateExisting, CancellationToken cancellationToken)
+        private async Task<bool> AddRobotAsync(IXLRow row, bool updateExisting, ImportResult result, int rowIndex, CancellationToken cancellationToken)
         {
-            string name = row.Cell(1).Value.ToString();
-            string serialNumber = row.Cell(2).Value.ToString();
-            string ipAddress = row.Cell(3).Value.ToString();
-            string statusName = row.Cell(4).Value.ToString();
-            string firmwareVersion = row.Cell(5).Value.ToString();
-            string policyName = row.Cell(6).Value.ToString();
+            string name = row.Cell(1).Value.ToString().Trim();
+            string serialNumber = row.Cell(2).Value.ToString().Trim();
+            string ipAddress = row.Cell(3).Value.ToString().Trim();
+            string statusName = row.Cell(4).Value.ToString().Trim();
+            string firmwareVersion = row.Cell(5).Value.ToString().Trim();
+            string policyName = row.Cell(6).Value.ToString().Trim();
 
-            if (string.IsNullOrWhiteSpace(serialNumber)) return;
+            // Якщо рядок повністю порожній - просто пропускаємо
+            if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(serialNumber)) return false;
+
+            // --- КОРОТКА ВАЛІДАЦІЯ РЯДКА ---
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(serialNumber))
+            {
+                result.Errors.Add($"Імпорт скасовано. У рядку {rowIndex} пропущено обов'язкове поле (Name або Serial Number).");
+                return false;
+            }
 
             RobotStatus status = null;
             if (!string.IsNullOrWhiteSpace(statusName))
@@ -89,15 +145,11 @@ namespace FleetManager.Infrastructure.Services
                 }
             }
 
-            var robot = await _context.Robots
-        .FirstOrDefaultAsync(r => r.SerialNumber == serialNumber, cancellationToken);
+            var robot = await _context.Robots.FirstOrDefaultAsync(r => r.SerialNumber == serialNumber, cancellationToken);
 
             if (robot != null)
             {
-                if (!updateExisting)
-                {
-                    return;
-                }
+                if (!updateExisting) return false;
             }
             else
             {
@@ -111,6 +163,8 @@ namespace FleetManager.Infrastructure.Services
             robot.Firmware = firmware;
             robot.Policy = policy;
             robot.UpdatedAt = DateTime.UtcNow;
+
+            return true;
         }
     }
 }

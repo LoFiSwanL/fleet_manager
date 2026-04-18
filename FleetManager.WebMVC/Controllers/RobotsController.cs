@@ -202,12 +202,36 @@ namespace FleetManager.WebMVC.Controllers
 
             bool updateExisting = (duplicateHandling == "overwrite");
 
-            var importService = _dataPortServiceFactory.GetImportService(fileExcel.ContentType);
-            using var stream = fileExcel.OpenReadStream();
+            try
+            {
+                var importService = _dataPortServiceFactory.GetImportService(fileExcel.ContentType);
+                using var stream = fileExcel.OpenReadStream();
 
-            await importService.ImportFromStreamAsync(stream, updateExisting, cancellationToken);
+                var result = await importService.ImportFromStreamAsync(stream, updateExisting, cancellationToken);
 
-            return RedirectToAction(nameof(Index));
+                if (!result.Success)
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error);
+                    }
+
+                    if (result.ImportedCount > 0)
+                    {
+                        TempData["SuccessMessage"] = $"Увага: Частковий імпорт. Збережено {result.ImportedCount} записів, але виявлено помилки.";
+                    }
+
+                    return View(); 
+                }
+
+                TempData["SuccessMessage"] = $"Успіх! Оброблено {result.ImportedCount} записів.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Системна помилка при читанні файлу: {ex.Message}");
+                return View();
+            }
         }
     }
 }
