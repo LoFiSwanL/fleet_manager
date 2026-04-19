@@ -1,7 +1,11 @@
+using FleetManager.Domain.Models;
 using FleetManager.Infrastructure;
 using FleetManager.Infrastructure.Services;
+using FleetManager.WebMVC;
 using FleetManager.WebMVC.Services;
-using Microsoft.EntityFrameworkCore; 
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +19,50 @@ builder.Services.AddDbContext<FleetContext>(options =>
 
 builder.Services.AddHostedService<TelemetrySimulatorService>();
 
+builder.Services.AddIdentity<User, IdentityRole>(options => {
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 1;
+})
+.AddEntityFrameworkStores<FleetContext>()
+.AddDefaultTokenProviders();
+
+builder.Services.AddScoped<FleetManager.WebMVC.Services.IEmailSender, FleetManager.WebMVC.Services.SmtpEmailSender>();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Home/AccessDenied"; 
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var userManager = services.GetRequiredService<UserManager<User>>();
+        var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var fleetContext = services.GetRequiredService<FleetContext>();
+
+        await RoleInitializer.InitializeAsync(userManager, rolesManager, fleetContext);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Помилка при ініціалізації БД.");
+    }
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -25,6 +72,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

@@ -43,12 +43,12 @@
             <span class="delete-btn" title="Remove Workspace">✖</span>
             <h6 class="text-accent mb-3">/OPERATORS/ACTIVE</h6>
             <table class="table table-sm table-hover">
-                <thead><tr><th>Username</th><th>Status</th></tr></thead>
+                <thead><tr><th>UserName</th><th>Status</th></tr></thead>
                 <tbody>
                     @foreach (var u in (IEnumerable<FleetManager.Domain.Models.User>)ViewBag.Users)
                     {
                         <tr>
-                            <td>@u.Username</td>
+                            <td>@u.UserName</td>
                             <td>
                                 @if (u.IsActive == true)
                                 {

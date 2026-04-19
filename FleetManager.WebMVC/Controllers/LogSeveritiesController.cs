@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FleetManager.Domain.Models;
@@ -43,6 +44,11 @@ namespace FleetManager.WebMVC.Controllers
 
         public IActionResult Create()
         {
+            if (!User.IsInRole("superadmin") && !User.IsInRole("admin"))
+            {
+                TempData["ErrorMessage"] = "Недостатньо прав для створення severity.";
+                return RedirectToAction(nameof(Index));
+            }
             return View();
         }
 
@@ -50,6 +56,11 @@ namespace FleetManager.WebMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Id")] LogSeverity logSeverity)
         {
+            if (!User.IsInRole("superadmin") && !User.IsInRole("admin"))
+            {
+                TempData["ErrorMessage"] = "Недостатньо прав для створення severity.";
+                return RedirectToAction(nameof(Index));
+            }
             if (ModelState.IsValid)
             {
                 _context.Add(logSeverity);
@@ -61,6 +72,11 @@ namespace FleetManager.WebMVC.Controllers
 
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!User.IsInRole("superadmin") && !User.IsInRole("admin"))
+            {
+                TempData["ErrorMessage"] = "Недостатньо прав для редагування severity.";
+                return RedirectToAction(nameof(Index));
+            }
             if (id == null)
             {
                 return NotFound();
@@ -78,6 +94,11 @@ namespace FleetManager.WebMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Name,Id")] LogSeverity logSeverity)
         {
+            if (!User.IsInRole("superadmin") && !User.IsInRole("admin"))
+            {
+                TempData["ErrorMessage"] = "Недостатньо прав для редагування severity.";
+                return RedirectToAction(nameof(Index));
+            }
             if (id != logSeverity.Id)
             {
                 return NotFound();
@@ -108,6 +129,11 @@ namespace FleetManager.WebMVC.Controllers
 
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!User.IsInRole("superadmin") && !User.IsInRole("admin"))
+            {
+                TempData["ErrorMessage"] = "Недостатньо прав для видалення severity.";
+                return RedirectToAction(nameof(Index));
+            }
             if (id == null)
             {
                 return NotFound();
@@ -127,6 +153,11 @@ namespace FleetManager.WebMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!User.IsInRole("superadmin") && !User.IsInRole("admin"))
+            {
+                TempData["ErrorMessage"] = "Недостатньо прав для видалення severity.";
+                return RedirectToAction(nameof(Index));
+            }
             var item = await _context.LogSeverities.FindAsync(id);
             if (item != null)
             {

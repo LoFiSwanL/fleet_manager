@@ -1,9 +1,11 @@
 using FleetManager.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FleetManager.WebMVC.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly FleetContext _context;

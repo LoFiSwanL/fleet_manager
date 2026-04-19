@@ -49,7 +49,7 @@ namespace FleetManager.WebMVC.Controllers
         {
             ViewData["RobotId"] = new SelectList(_context.Robots, "Id", "Name");
             ViewData["SeverityId"] = new SelectList(_context.LogSeverities.Where(s => s.Name.ToLower() != "smth"), "Id", "Name");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Username");
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName");
             return View();
         }
 
@@ -69,7 +69,7 @@ namespace FleetManager.WebMVC.Controllers
             }
             ViewData["RobotId"] = new SelectList(_context.Robots, "Id", "Name", hardwareLog.RobotId);
             ViewData["SeverityId"] = new SelectList(_context.LogSeverities, "Id", "Name", hardwareLog.SeverityId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Username", hardwareLog.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", hardwareLog.UserId);
             return View(hardwareLog);
         }
 
@@ -82,7 +82,7 @@ namespace FleetManager.WebMVC.Controllers
 
             ViewData["RobotId"] = new SelectList(_context.Robots, "Id", "Name", hardwareLog.RobotId);
             ViewData["SeverityId"] = new SelectList(_context.LogSeverities, "Id", "Name", hardwareLog.SeverityId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Username", hardwareLog.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", hardwareLog.UserId);
             return View(hardwareLog);
         }
 
@@ -119,7 +119,7 @@ namespace FleetManager.WebMVC.Controllers
             }
             ViewData["RobotId"] = new SelectList(_context.Robots, "Id", "Name", hardwareLog.RobotId);
             ViewData["SeverityId"] = new SelectList(_context.LogSeverities, "Id", "Name", hardwareLog.SeverityId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Username", hardwareLog.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", hardwareLog.UserId);
             return View(hardwareLog);
         }
 

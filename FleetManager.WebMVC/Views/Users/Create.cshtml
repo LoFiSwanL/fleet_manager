@@ -12,15 +12,24 @@
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ContainsKey("RoleId") && ViewData.ModelState["RoleId"].Errors.Count > 0)
+            {
+                <div class="alert alert-danger">@ViewData.ModelState["RoleId"].Errors[0].ErrorMessage</div>
+            }
             <div class="form-group">
-                <label asp-for="Username" class="control-label"></label>
-                <input asp-for="Username" class="form-control" />
-                <span asp-validation-for="Username" class="text-danger"></span>
+                <label asp-for="UserName" class="control-label"></label>
+                <input asp-for="UserName" class="form-control" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="FullName" class="control-label"></label>
                 <input asp-for="FullName" class="form-control" />
                 <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label">Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="PasswordHash" class="control-label">Password</label>
@@ -30,6 +39,10 @@
             <div class="form-group">
                 <label asp-for="RoleId" class="control-label">Role</label>
                 <select asp-for="RoleId" class ="form-control" asp-items="ViewBag.RoleId"></select>
+                <span asp-validation-for="RoleId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <small id="emailHelp" class="text-muted">Для ролі <strong>admin</strong> поле Email обов'язкове.</small>
             </div>
             <div class="form-group mt-4 mb-3">
                 <input type="submit" value="Create" class="btn btn-primary" />
@@ -44,4 +57,24 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        (function(){
+            var roleSelect = document.querySelector('[name="RoleId"]');
+            var emailInput = document.querySelector('[name="Email"]');
+            function updateEmailRequirement(){
+                if (!roleSelect || !emailInput) return;
+                var selected = roleSelect.options[roleSelect.selectedIndex];
+                var text = selected ? selected.text.toLowerCase() : '';
+                if (text === 'admin'){
+                    emailInput.required = true;
+                    document.getElementById('emailHelp').textContent = 'Email обов\'язковий для ролі admin.';
+                } else {
+                    emailInput.required = false;
+                    document.getElementById('emailHelp').textContent = 'Для ролі admin поле Email обов\'язкове.';
+                }
+            }
+            document.addEventListener('DOMContentLoaded', updateEmailRequirement);
+            if (roleSelect) roleSelect.addEventListener('change', updateEmailRequirement);
+        })();
+    </script>
 }

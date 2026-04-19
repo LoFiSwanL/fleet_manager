@@ -1,14 +1,15 @@
-﻿using System;
+﻿using FleetManager.Domain.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using FleetManager.Domain.Models;
 
 namespace FleetManager.Infrastructure;
 
-public partial class FleetContext : DbContext
+public partial class FleetContext : IdentityDbContext<User>
 {
     public FleetContext() { }
 
@@ -52,6 +53,7 @@ public partial class FleetContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Firmware>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("firmware_pkey");
@@ -102,7 +104,7 @@ public partial class FleetContext : DbContext
             entity.HasKey(e => e.Id).HasName("users_pkey");
             entity.ToTable("users");
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Username).HasMaxLength(100).HasColumnName("username");
+            entity.Property(e => e.UserName).HasMaxLength(100).HasColumnName("UserName");
             entity.Property(e => e.FullName).HasMaxLength(255).HasColumnName("full_name");
             entity.Property(e => e.PasswordHash).HasMaxLength(255).HasColumnName("password_hash");
             entity.Property(e => e.RoleId).HasColumnName("role_id");

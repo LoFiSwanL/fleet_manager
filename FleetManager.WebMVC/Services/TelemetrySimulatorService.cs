@@ -13,10 +13,12 @@ namespace FleetManager.WebMVC.Services
     public class TelemetrySimulatorService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly Microsoft.Extensions.Logging.ILogger<TelemetrySimulatorService> _logger;
 
-        public TelemetrySimulatorService(IServiceScopeFactory scopeFactory)
+        public TelemetrySimulatorService(IServiceScopeFactory scopeFactory, Microsoft.Extensions.Logging.ILogger<TelemetrySimulatorService> logger)
         {
             _scopeFactory = scopeFactory;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,37 +40,53 @@ namespace FleetManager.WebMVC.Services
 
                 using (var scope = _scopeFactory.CreateScope())
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<FleetContext>();
-
-                    var robots = await context.Robots.ToListAsync(stoppingToken);
-                    var severities = await context.LogSeverities
-                                        .Where(s => s.Name.ToLower() != "smth")
-                                        .ToListAsync(stoppingToken);
-
-                    if (robots.Any() && severities.Any())
+                    try
                     {
-                        var mockMessages = new[] {
-                            "[AUTO] Temperature spike in joint 3",
-                            "[AUTO] Vision system latency > 50ms",
-                            "[AUTO] Calibration required",
-                            "[AUTO] Network signal weak",
-                            "[AUTO] Battery level at 15%",
-                            "[AUTO] Object successfully grasped"
-                        };
+                        var context = scope.ServiceProvider.GetRequiredService<FleetContext>();
 
-                        int logsToGenerate = random.Next(1, 3);
-                        for (int i = 0; i < logsToGenerate; i++)
+                        var robots = await context.Robots.ToListAsync(stoppingToken);
+                        var severities = await context.LogSeverities
+                                            .Where(s => s.Name.ToLower() != "smth")
+                                            .ToListAsync(stoppingToken);
+
+                        if (robots.Any() && severities.Any())
                         {
-                            var newLog = new HardwareLog
-                            {
-                                RobotId = robots[random.Next(robots.Count)].Id,
-                                SeverityId = severities[random.Next(severities.Count)].Id,
-                                Message = mockMessages[random.Next(mockMessages.Length)]
+                            var mockMessages = new[] {
+                                "[AUTO] Temperature spike in joint 3",
+                                "[AUTO] Vision system latency > 50ms",
+                                "[AUTO] Calibration required",
+                                "[AUTO] Network signal weak",
+                                "[AUTO] Battery level at 15%",
+                                "[AUTO] Object successfully grasped"
                             };
-                            context.Add(newLog);
-                        }
 
-                        await context.SaveChangesAsync(stoppingToken);
+                            int logsToGenerate = random.Next(1, 3);
+                            for (int i = 0; i < logsToGenerate; i++)
+                            {
+                                var newLog = new HardwareLog
+                                {
+                                    RobotId = robots[random.Next(robots.Count)].Id,
+                                    SeverityId = severities[random.Next(severities.Count)].Id,
+                                    Message = mockMessages[random.Next(mockMessages.Length)]
+                                };
+                                context.Add(newLog);
+                            }
+
+                            await context.SaveChangesAsync(stoppingToken);
+                        }
+                    }
+                    catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "TelemetrySimulatorService: transient DB error while generating telemetry. Will retry later.");
+                        try
+                        {
+                            await Task.Delay(2000, stoppingToken);
+                        }
+                        catch (TaskCanceledException) { break; }
                     }
                 }
             }

@@ -7,7 +7,7 @@ public partial class HardwareLog : BaseEntity
 {
     public int? RobotId { get; set; }
 
-    public int? UserId { get; set; }
+    public string? UserId { get; set; }
 
     public int? SeverityId { get; set; }
 

@@ -1,24 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using DocumentFormat.OpenXml.InkML;
+using FleetManager.Domain.Models;
+using FleetManager.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using FleetManager.Domain.Models;
-using FleetManager.Infrastructure;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FleetManager.WebMVC.Controllers
 {
+    [Authorize]
+
     public class UsersController : Controller
     {
+        private readonly UserManager<User> _userManager;
         private readonly FleetContext _context;
 
-        public UsersController(FleetContext context)
+        public UsersController(FleetContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -27,76 +34,192 @@ namespace FleetManager.WebMVC.Controllers
             return View(await fleetContext.ToListAsync());
         }
 
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(string id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+
+            if (user == null) return NotFound();
 
             return View(user);
         }
 
+        [Authorize(Roles = "superadmin,admin")]
         public IActionResult Create()
         {
-            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name");
+            var roles = _context.Roles.AsQueryable();
+
+            if (User.IsInRole("admin"))
+            {
+                roles = roles.Where(r => r.Name == "user");
+            }
+
+            ViewData["RoleId"] = new SelectList(roles, "Id", "Name");
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Username,PasswordHash,FullName,IsActive,RoleId")] User user)
+        [Authorize(Roles = "superadmin,admin")]
+        public async Task<IActionResult> Create([Bind("UserName,Email,PasswordHash,FullName,IsActive,RoleId")] User user)
         {
+
             ModelState.Remove("Role");
 
-            if (!string.IsNullOrEmpty(user.Username) && user.Username.Trim().ToLower() == "admin")
+            if (string.IsNullOrWhiteSpace(user.UserName))
             {
-                var adminExists = await _context.Users.AnyAsync(u => u.Username.ToLower() == "admin");
-                if (adminExists)
-                {
-                    ModelState.AddModelError("Username", "[ ПОМИЛКА ] Обліковий запис суперадміністратора вже існує!");
-                }
+                ModelState.AddModelError("UserName", "Логін є обов'язковим");
             }
 
             if (ModelState.IsValid)
             {
-                user.PasswordHash = HashPassword(user.PasswordHash);
 
-                _context.Add(user);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var selectedRole = await _context.Roles.FindAsync(user.RoleId);
+                if (User.IsInRole("admin") && selectedRole != null && selectedRole.Name != "user")
+                {
+                    ModelState.AddModelError("RoleId", "Адміністратор може створювати лише користувачів з роллю 'user'.");
+                }
+
+
+                if (selectedRole != null && selectedRole.Name == "superadmin")
+                {
+                    var existingInIdentity = await _userManager.GetUsersInRoleAsync("superadmin");
+                    var existingInTable = _context.Users.Include(u => u.Role).Any(u => u.Role != null && u.Role.Name == "superadmin");
+                    if (existingInIdentity.Any() || existingInTable)
+                    {
+                        ModelState.AddModelError("RoleId", "В системі вже існує суперадміністратор. Неможливо створити ще одного.");
+                    }
+                }
+
+                if (selectedRole != null && selectedRole.Name == "admin")
+                {
+                    if (string.IsNullOrWhiteSpace(user.Email))
+                    {
+                        ModelState.AddModelError("Email", "Email є обов'язковим для акаунтів з роллю admin або superadmin.");
+                    }
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+                    return View(user);
+                }
+
+                var newUser = new User
+                {
+                    UserName = user.UserName,
+                    Email = string.IsNullOrWhiteSpace(user.Email) ? user.UserName : user.Email,
+                    FullName = user.FullName,
+                    IsActive = user.IsActive ?? true,
+                    RoleId = user.RoleId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+
+                var passwordToUse = user.PasswordHash;
+                var autoGenerated = false;
+                if (string.IsNullOrWhiteSpace(passwordToUse))
+                {
+                    if (selectedRole != null && selectedRole.Name == "admin")
+                    {
+                        passwordToUse = GenerateRandomPassword();
+                        autoGenerated = true;
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("PasswordHash", "Пароль є обов'язковим для цього типу користувача.");
+                        ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+                        return View(user);
+                    }
+                }
+
+                var createResult = await _userManager.CreateAsync(newUser, passwordToUse);
+
+                if (createResult.Succeeded)
+                {
+
+                    if (selectedRole != null)
+                    {
+                        await _userManager.AddToRoleAsync(newUser, selectedRole.Name);
+                    }
+
+                    if (autoGenerated)
+                    {
+                        var emailSender = HttpContext.RequestServices.GetService(typeof(FleetManager.WebMVC.Services.IEmailSender)) as FleetManager.WebMVC.Services.IEmailSender;
+                        if (emailSender != null && !string.IsNullOrWhiteSpace(newUser.Email))
+                        {
+                            try
+                            {
+                                await emailSender.SendEmailAsync(newUser.Email, "Ваш пароль для входу", $"Ваш тимчасовий пароль: {passwordToUse}");
+                                TempData["InfoMessage"] = "Користувача створено. Пароль було згенеровано і надіслано на вказаний email.";
+                            }
+                            catch
+                            {
+                                TempData["InfoMessage"] = "Користувача створено. Пароль згенеровано, але не вдалося надіслати email (перевірте SMTP).";
+                            }
+                        }
+                        else
+                        {
+                            TempData["InfoMessage"] = "Користувача створено. Пароль згенеровано, але email не вказано.";
+                        }
+                    }
+
+                    return RedirectToAction(nameof(Index));
+                }
+
+                foreach (var error in createResult.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
             }
+
             ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
             return View(user);
         }
 
-        public async Task<IActionResult> Edit(int? id)
+        [Authorize(Roles = "superadmin,admin")]
+        public async Task<IActionResult> Edit(string id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var user = await _context.Users.FindAsync(id);
-            if (user == null)
+            if (user == null) return NotFound();
+
+            var currentUserId = _userManager.GetUserId(User);
+
+            if (User.IsInRole("superadmin") && user.Id == currentUserId)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Ви не можете редагувати свій власний профіль суперадміна.";
+                return RedirectToAction(nameof(Index));
             }
-            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+
+            if (User.IsInRole("admin"))
+            {
+                if (await _userManager.IsInRoleAsync(user, "superadmin") || await _userManager.IsInRoleAsync(user, "admin"))
+                {
+                    TempData["ErrorMessage"] = "Ви не можете редагувати профілі адміністраторів або суперадміністратора.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            var roles = _context.Roles.AsQueryable();
+
+            if (User.IsInRole("admin"))
+            {
+                roles = roles.Where(r => r.Name == "user");
+            }
+
+            ViewData["RoleId"] = new SelectList(roles, "Id", "Name", user.RoleId);
             return View(user);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Username,PasswordHash,FullName,IsActive,RoleId")] User user)
+        [Authorize(Roles = "superadmin,admin")]
+        public async Task<IActionResult> Edit(string id, [Bind("Id,UserName,PasswordHash,FullName,IsActive,RoleId,Email")] User user)
         {
             if (id != user.Id) return NotFound();
 
@@ -107,23 +230,78 @@ namespace FleetManager.WebMVC.Controllers
                 ModelState.Remove("PasswordHash");
             }
 
-            if (!string.IsNullOrEmpty(user.Username) && user.Username.Trim().ToLower() == "admin")
+            if (!string.IsNullOrEmpty(user.UserName) && user.UserName.Trim().ToLower() == "admin")
             {
-                var adminExists = await _context.Users.AnyAsync(u => u.Username.ToLower() == "admin" && u.Id != user.Id);
+                var adminExists = await _context.Users.AnyAsync(u => u.UserName.ToLower() == "admin" && u.Id != user.Id);
                 if (adminExists)
                 {
-                    ModelState.AddModelError("Username", "[ ПОМИЛКА ] Обліковий запис суперадміністратора вже існує!");
+                    ModelState.AddModelError("UserName", "[ ПОМИЛКА ] Обліковий запис суперадміністратора вже існує!");
                 }
+            }
+
+            if (string.IsNullOrWhiteSpace(user.UserName))
+            {
+                ModelState.AddModelError("UserName", "Логін є обов'язковим");
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    var newRole = await _context.Roles.FindAsync(user.RoleId);
+                    if (newRole != null && newRole.Name == "admin" && string.IsNullOrWhiteSpace(user.Email))
+                    {
+                        ModelState.AddModelError("Email", "Email є обов'язковим для акаунту з роллю admin.");
+                        ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+                        return View(user);
+                    }
+                    if (User.IsInRole("admin") && newRole != null && newRole.Name != "user")
+                    {
+                        ModelState.AddModelError("RoleId", "Адміністратор може призначати лише роль 'user'.");
+                        ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+                        return View(user);
+                    }
+
+                    if (newRole != null && newRole.Name == "superadmin")
+                    {
+                        var existingSuperadmins = await _userManager.GetUsersInRoleAsync("superadmin");
+                        if (existingSuperadmins.Any(u => u.Id != user.Id))
+                        {
+                            ModelState.AddModelError("RoleId", "В системі вже існує суперадміністратор. Неможливо призначити роль 'superadmin'.");
+                            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+                            return View(user);
+                        }
+
+                        var currentUserId = _userManager.GetUserId(User);
+                        if (User.IsInRole("superadmin") && user.Id != currentUserId)
+                        {
+                            ModelState.AddModelError("RoleId", "Суперадмін не може призначати роль 'superadmin' іншим користувачам.");
+                            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+                            return View(user);
+                        }
+                    }
+
                     var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
                     if (userToUpdate == null) return NotFound();
 
-                    userToUpdate.Username = user.Username;
+                    if (User.IsInRole("admin") && (await _userManager.IsInRoleAsync(userToUpdate, "admin") || await _userManager.IsInRoleAsync(userToUpdate, "superadmin")))
+                    {
+                        ModelState.AddModelError("", "Ви не маєте прав редагувати адміністратора чи суперадміністратора.");
+                        ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+                        return View(user);
+                    }
+
+                    if (!string.IsNullOrEmpty(userToUpdate.UserName) && userToUpdate.UserName.ToLower() == "admin")
+                    {
+                        if (user.UserName.ToLower() != "admin" || (newRole != null && newRole.Name != "superadmin"))
+                        {
+                            ModelState.AddModelError("", "Суперадмін 'admin' є захищеним і не може бути змінений.");
+                            ViewData["RoleId"] = new SelectList(_context.Roles, "Id", "Name", user.RoleId);
+                            return View(user);
+                        }
+                    }
+
+                    userToUpdate.UserName = user.UserName;
 
                     if (!string.IsNullOrEmpty(user.PasswordHash) && user.PasswordHash.Length < 50)
                     {
@@ -146,7 +324,8 @@ namespace FleetManager.WebMVC.Controllers
             return View(user);
         }
 
-        public async Task<IActionResult> Delete(int? id)
+        [Authorize(Roles = "superadmin,admin")]
+        public async Task<IActionResult> Delete(string id)
         {
             if (id == null) return NotFound();
 
@@ -156,10 +335,28 @@ namespace FleetManager.WebMVC.Controllers
 
             if (user == null) return NotFound();
 
-            if (user.Username.ToLower() == "admin")
+
+            if (!string.IsNullOrEmpty(user.UserName) && user.UserName.ToLower() == "admin")
             {
-                TempData["ErrorMessage"] = "[ СИСТЕМНА ПОМИЛКА ] Неможливо видалити кореневого адміністратора.";
+                TempData["ErrorMessage"] = "[ СИСТЕМНА ПОМИЛКА ] Неможливо видалити суперадміністратора.";
                 return RedirectToAction(nameof(Index));
+            }
+
+
+            if (await _userManager.IsInRoleAsync(user, "superadmin"))
+            {
+                TempData["ErrorMessage"] = "[ СИСТЕМНА ПОМИЛКА ] Неможливо видалити суперадміністратора.";
+                return RedirectToAction(nameof(Index));
+            }
+
+
+            if (User.IsInRole("admin"))
+            {
+                if (!await _userManager.IsInRoleAsync(user, "user"))
+                {
+                    TempData["ErrorMessage"] = "Ви не маєте прав видаляти цього користувача.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
             return View(user);
@@ -167,16 +364,33 @@ namespace FleetManager.WebMVC.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        [Authorize(Roles = "superadmin,admin")]
+        public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var user = await _context.Users.FindAsync(id);
 
             if (user != null)
             {
-                if (user.Username.ToLower() == "admin")
+                if (await _userManager.IsInRoleAsync(user, "superadmin"))
                 {
+                    var currentUserId = _userManager.GetUserId(User);
+                    if (user.Id == currentUserId)
+                    {
+                        TempData["ErrorMessage"] = "Ви не можете видалити свій власний обліковий запис суперадміна.";
+                        return RedirectToAction(nameof(Index));
+                    }
+
                     TempData["ErrorMessage"] = "[ КРИТИЧНА ПОМИЛКА ] Спроба несанкціонованого видалення суперадміна заблокована.";
                     return RedirectToAction(nameof(Index));
+                }
+
+                if (User.IsInRole("admin"))
+                {
+                    if (!await _userManager.IsInRoleAsync(user, "user"))
+                    {
+                        TempData["ErrorMessage"] = "Ви не маєте прав видаляти цього користувача.";
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
 
                 _context.Users.Remove(user);
@@ -185,7 +399,7 @@ namespace FleetManager.WebMVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool UserExists(int id)
+        private bool UserExists(string id)
         {
             return _context.Users.Any(e => e.Id == id);
         }
@@ -201,8 +415,26 @@ namespace FleetManager.WebMVC.Controllers
             }
         }
 
+        private string GenerateRandomPassword(int length = 10)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            var sb = new StringBuilder();
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                var buf = new byte[4];
+                while (sb.Length < length)
+                {
+                    rng.GetBytes(buf);
+                    var num = BitConverter.ToUInt32(buf, 0);
+                    sb.Append(chars[(int)(num % (uint)chars.Length)]);
+                }
+            }
+            return sb.ToString();
+        }
+
         [HttpPost]
-        public async Task<IActionResult> ToggleStatus(int id, bool isActive)
+        [Authorize(Roles = "superadmin,admin")]
+        public async Task<IActionResult> ToggleStatus(string id, bool isActive)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
@@ -210,9 +442,19 @@ namespace FleetManager.WebMVC.Controllers
                 return Json(new { success = false, message = "Користувача не знайдено." });
             }
 
-            if (user.Username != null && user.Username.ToLower() == "admin" && !isActive)
+
+            if (await _userManager.IsInRoleAsync(user, "superadmin") && !isActive)
             {
                 return Json(new { success = false, message = " Неможливо деактивувати суперадміністратора!" });
+            }
+
+
+            if (User.IsInRole("admin"))
+            {
+                if (!await _userManager.IsInRoleAsync(user, "user"))
+                {
+                    return Json(new { success = false, message = "Ви не маєте прав змінювати статус цього користувача." });
+                }
             }
 
             user.IsActive = isActive;

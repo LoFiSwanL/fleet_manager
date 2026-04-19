@@ -1,29 +1,24 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace FleetManager.Domain.Models;
-
-public partial class User : BaseEntity
+namespace FleetManager.Domain.Models
 {
-    [Required(ErrorMessage = "Логін є обов'язковим")]
-    public string Username { get; set; } = null!;
+    public partial class User : IdentityUser
+    {
 
-    [Required(ErrorMessage = "Повне ім'я є обов'язковим")]
-    public string? FullName { get; set; }
+        [Required(ErrorMessage = "Повне ім'я є обов'язковим")]
+        public string? FullName { get; set; }
 
-    [Required]
-    [Display(Name = "Password")]
-    [DataType(DataType.Password)]
-    public string PasswordHash { get; set; }
+        public int? RoleId { get; set; }
 
-    public int? RoleId { get; set; }
+        public bool? IsActive { get; set; }
 
-    public bool? IsActive { get; set; }
+        public DateTime? CreatedAt { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+        public virtual ICollection<HardwareLog> HardwareLogs { get; set; } = new List<HardwareLog>();
 
-    public virtual ICollection<HardwareLog> HardwareLogs { get; set; } = new List<HardwareLog>();
-
-    public virtual Role? Role { get; set; }
+        public virtual Role? Role { get; set; }
+    }
 }

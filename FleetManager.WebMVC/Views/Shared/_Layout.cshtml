@@ -43,6 +43,32 @@
                     <li class="nav-item mb-1"><a class="nav-link text-secondary p-0" asp-controller="LogSeverities" asp-action="Index">- Severities</a></li>
                 </ul>
 
+                <ul class="navbar-nav ms-auto">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item d-flex align-items-center">
+                            <span class="text-light me-3 fw-bold">👤 @User.Identity.Name</span>
+                            @if (User.IsInRole("superadmin"))
+                            {
+                                <span class="badge bg-danger text-uppercase ms-2">superadmin</span>
+                            }
+                            else if (User.IsInRole("admin"))
+                            {
+                                <span class="badge bg-warning text-dark text-uppercase ms-2">admin</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary text-uppercase ms-2">user</span>
+                            }
+                        </li>
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="btn btn-outline-danger">Вийти</button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+
                 @if (currentController == "Home")
                 {
                     <button id="btnAddWorkspace" class="btn btn-sm btn-outline-success w-100 mb-4" style="display: none;">+ ADD WORKSPACE</button>
@@ -52,6 +78,14 @@
         </aside>
 
         <main role="main" class="flex-grow-1 p-4 container-fluid" style="padding-bottom: 80px !important;">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger mb-3">@TempData["ErrorMessage"]</div>
+            }
+            @if (TempData["InfoMessage"] != null)
+            {
+                <div class="alert alert-info mb-3">@TempData["InfoMessage"]</div>
+            }
             @RenderBody()
         </main>
     </div>
