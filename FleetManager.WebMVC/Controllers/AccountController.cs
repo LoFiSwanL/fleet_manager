@@ -109,6 +109,11 @@ namespace FleetManager.WebMVC.Controllers
                 }
 
                 var signInName = user.UserName;
+                if (user != null && !user.IsActive.GetValueOrDefault(true))
+                {
+                    ModelState.AddModelError(string.Empty, "Ваш обліковий запис деактивовано. Зверніться до адміністратора.");
+                    return View(model);
+                }
                 var result = await _signInManager.PasswordSignInAsync(signInName, model.Password, isPersistent: false, lockoutOnFailure: false);
 
                 if (result.IsNotAllowed)

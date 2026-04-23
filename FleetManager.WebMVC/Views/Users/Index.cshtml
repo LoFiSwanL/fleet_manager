@@ -19,10 +19,7 @@
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.UserName)</th>
-                <th>@Html.DisplayNameFor(model => model.FullName)</th>
-                <th>@Html.DisplayNameFor(model => model.PasswordHash)</th>
                 <th>@Html.DisplayNameFor(model => model.IsActive)</th>
-                <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
                 <th>@Html.DisplayNameFor(model => model.Role)</th>
                 <th>ACTIONS</th>
             </tr>
@@ -32,11 +29,6 @@
             {
                 <tr>
                     <td>@Html.DisplayFor(modelItem => item.UserName)</td>
-                    <td>@Html.DisplayFor(modelItem => item.FullName)</td>
-
-                    <td class="text-muted font-monospace">
-                        ********
-                    </td>
 
                     <td>
                         @if (item.UserName != null && item.UserName.ToLower() == "admin")
@@ -62,7 +54,6 @@
                         }
                     </td>
 
-                    <td>@(item.CreatedAt.HasValue? item.CreatedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "—")</td>
 
                     <td>@Html.DisplayFor(modelItem => item.Role.Name)</td>
 
